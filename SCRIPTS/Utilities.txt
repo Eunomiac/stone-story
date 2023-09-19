@@ -1,3 +1,29 @@
+
+
+func Set(key, val)
+  storage.Set(key, val)
+  return val
+
+func Get(key)
+  return storage.Get(key)
+
+func Toggle(key)
+  Set(key, !Get(key))
+  return Get(key)
+  
+func Cycle(key, vals)
+  var curVal = Get(key)
+  var index = vals.IndexOf(curVal)
+  ?index = vals.Count()
+    Set(key, vals[0])
+  :
+    Set(key, vals[index])
+
+func Reset()
+  Set("twoHandedOverride", false)
+  Set("weaponOverride", false)
+  Set("shieldOverride", false)
+ 
 func breakBuff(buff)
   var buffParts = string.Split(buff, ":")
   buffParts[2] = int.Parse(buffParts[2])
@@ -25,6 +51,9 @@ func getBuffCount(buffName)
 
 func getDebuffCount(buffName)
   return getBuffParts(buffName, debuffs.string)[0]
+  
+func getFoeDebuffCount(buffName)
+  return getBuffParts(buffName, foe.debuffs.string)[0]
 
 func getArmor()
   return math.Round((armor * 10) + armor.f) / 10
@@ -59,7 +88,6 @@ var locations = ["Rocky Plateau", "Deadwood Canyon", "Caves of Fear", "Mushroom 
 var locElems = ["none",  "none", "poison", "vigor", "aether", "fire", "ice", "poison"]
 var elements = ["none", "poison", "vigor",  "aether", "fire", "ice"]
 var counterElements = ["none", "vigor", "aether", "fire", "ice", "poison"]
-
 
 var potions = ["experience","strength","healing","lightning","invisibility","cleansing","berserk","defensive","lucky","vampiric"]
 var ingredients = ["wood + wood", "stone + stone", "tar + tar", "bronze + bronze", "wood + stone", "wood + tar", "wood + bronze", "stone + tar", "stone + bronze", "tar + bronze"]
@@ -129,18 +157,122 @@ func isFacingBoss()
       return true
   return false
  
+func isRangedWeapon(itemid)
+  return itemid = crossbow | itemid = wand | itemid = talisman | itemid = staff | itemid = ouroboros
+
+
 var leftItem = item.left
 var rightItem = item.right
-func storeEquips()
-  ?String.Size(item.left) > 5
-    leftItem = item.left
-  ?String.Size(item.right) > 5
-    rightItem = item.right
+
+func storeEquipLeft(itemid)
+  ?isLeftLocked()
+    return
+  ?String.Size(itemid) > 2
+    Set("leftItem", itemid)
+  :?String.Size(item.left) > 2
+    Set("leftItem", item.left)
+  :
+    Set("leftItem", false)
+
+func storeEquipRight(itemid)
+  ?isRightLocked()
+    return
+  ?String.Size(itemid) > 2
+    Set("rightItem", itemid)
+  :?String.Size(item.right) > 2
+    Set("rightItem", item.right)
+  :
+    Set("rightItem", false)
+
+func getStoredLeft()
+  ?Get("weaponOverride")
+    return Get("weaponOverride")
+  return Get("leftItem")
+func getStoredRight()
+  return Get("rightItem")
+    
+func lockLeft()
+  Set("isLeftLocked", true)
+func lockLeftUntilAfterState(stateNum)
+  Set("isLeftLocked", stateNum)
+func unlockLeft()
+  Set("isLeftLocked", false)
   
-func restoreEquips()
-  ?String.Size(rightItem) > 5
-    equipR @rightItem@
-  ?String.Size(leftItem) > 5
-    equipL @leftItem@
-    equip @leftItem@
+func lockRight()
+  Set("isRightLocked", true)
+func lockRightUntilAfterState(stateNum)
+  Set("isRightLocked", stateNum)
+func unlockRight()
+  Set("isRightLocked", false)
   
+func isLeftLocked()
+  ?Get("isLeftLocked") = true | Get("isLeftLocked") = false
+    return Get("isLeftLocked")
+  return Get("isLeftLocked") < item.left.state
+func isRightLocked()
+  ?Get("isRightLocked") = true | Get("isRightLocked") = false
+    return Get("isRightLocked")
+  return Get("isRightLocked") < item.right.state
+  
+func equipRight(itemid)
+  ?isRightLocked()
+    equipR @getStoredRight()@
+    return
+
+  ?Get("shieldOverride")
+    equipRight(Get("shieldOverride"))
+    lockRight()
+    return
+
+  ?String.Size(itemid) > 2
+    storeEquipRight(itemid)
+  :?String.Size(item.right) > 2
+    storeEquipRight(item.right)
+
+  ?String.Size(getStoredRight()) > 2
+    equipR @getStoredRight()@
+
+func equipLeft(itemid)
+  ?isLeftLocked()
+    equipL @getStoredLeft()@
+    equip @getStoredLeft()@
+    return
+
+  ?Get("weaponOverride")
+    equipLeft(Get("weaponOverride"))
+    lockLeft()
+    return
+  ?Get("twoHandedOverride")    
+    equipLeft(Get("twoHandedOverride"))
+    lockLeft()
+    lockRight()
+    return
+    
+  unlockLeft()
+
+  ?String.Size(itemid) > 2
+    storeEquipLeft(itemid)
+  :?String.Size(item.left) > 2
+    storeEquipLeft(item.left)
+    
+  var storedLeft = getStoredLeft()
+
+  Set("usingRanged", isRangedWeapon(storedLeft))
+
+  ?String.Size(storedLeft) > 2
+    equipL @storedLeft@
+    equip @storedLeft@
+    
+func equipLeftUntilAfterState(itemid, state)
+  ?isLeftLocked()
+    return
+  ?String.Size(itemid) > 2
+    equipLeft(itemid)
+    lockLeftUntilAfterState(2)     
+        
+func equipRightUntilAfterState(itemid, state)
+  ?isRightLocked()
+    return
+  ?String.Size(itemid) > 2
+    equipRight(itemid)
+    lockRightUntilAfterState(2)   
