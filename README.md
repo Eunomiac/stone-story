@@ -5,7 +5,7 @@ Three files that, together, comprise the automation script for my Stone Story ga
 ## Assumptions Before We Begin
 As this is an evolution of my script as I played through Stone Story, it presumes a fairly 'end game' build, with all of the Lost Treasures and a large collection of enchanted weapons and shields.  Some of this can be configured and toggled off, but you may need to poke around in the script and make some custom changes to perfectly fit your game (and inventory!)
 
-In particular, the script assumes you have the following items in your inventory. If you are missing any (or just want to change what to use/craft), you'll have to skim the script to make the necessary changes (or just accept the occasional "no <X> to equip" error message).
+In particular, the script assumes you have the following items in your inventory. If you are missing any (or just want to change what to use/craft), you'll have to skim the script to make the necessary changes (or just accept the occasional "no \<X\> to equip" error message).
 
 - Bardiche ('big damage' and for cooldown ability)
 - Heavy Hammer (used vs. armor)
