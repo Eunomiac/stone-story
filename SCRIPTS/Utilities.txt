@@ -1,0 +1,146 @@
+func breakBuff(buff)
+  var buffParts = string.Split(buff, ":")
+  buffParts[2] = int.Parse(buffParts[2])
+  buffParts[3] = int.Parse(buffParts[3])
+  return [buffParts[1], buffParts[2], buffParts[3]]
+  
+func getBuffParts(buffName, buffString)
+  var buffStrings = string.split(buffString, ",")
+  for buffStr : buffStrings
+    var buffParts = string.Split(buffStr, ":")
+    ?Type(buffParts) = Type([]) & buffParts.Count() = 4
+      ?string.IndexOf(buffParts[1], buffName) > -1
+        return [int.Parse(buffParts[2]), int.Parse(buffParts[3])]
+  return [0, 0]
+
+func xLookup(val, arr1, arr2)
+  var index = arr1.IndexOf(val)
+  ?index > -1
+    return arr2[index]
+  :
+    return false
+
+func getBuffCount(buffName)
+  return getBuffParts(buffName, buffs.string)[0]
+
+func getDebuffCount(buffName)
+  return getBuffParts(buffName, debuffs.string)[0]
+
+func getArmor()
+  return math.Round((armor * 10) + armor.f) / 10
+
+var ranges = ["melee", "close", "medium", "ranged", "screen"]
+var units = [5, 11, 16, 25, 35]
+
+func isCloseAs(range)
+  return foe.distance <= xLookup(range, ranges, units)
+
+func isFarAs(range)
+  return foe.distance >= xLookup(range, ranges, units)
+
+func isWithin(rangeA, rangeB)
+  var unitA = xLookup(rangeA, ranges, units)
+  var unitB = xLookup(rangeB, ranges, units)
+  return isInRange(unitA, unitB)
+
+func isInRange(min, max)
+  ?max > min
+    return foe.distance >= min & foe.distance <= max
+  :
+    return foe.distance >= min
+
+func isInState(stateNum, stateTime)
+  return foe.state = stateNum & foe.time >= stateTime
+
+func toSeconds(frameCount)
+  return math.Round(frameCount / 3) / 10
+
+var locations = ["Rocky Plateau", "Deadwood Canyon", "Caves of Fear", "Mushroom Forest", "Haunted Halls",  "Boiling Mine", "Icy Ridge", "Temple"]
+var locElems = ["none",  "none", "poison", "vigor", "aether", "fire", "ice", "poison"]
+var elements = ["none", "poison", "vigor",  "aether", "fire", "ice"]
+var counterElements = ["none", "vigor", "aether", "fire", "ice", "poison"]
+
+
+var potions = ["experience","strength","healing","lightning","invisibility","cleansing","berserk","defensive","lucky","vampiric"]
+var ingredients = ["wood + wood", "stone + stone", "tar + tar", "bronze + bronze", "wood + stone", "wood + tar", "wood + bronze", "stone + tar", "stone + bronze", "tar + bronze"]
+
+func getHealingPotion()
+  ?res.stone > 1500
+    return "defensive"
+  :?res.bronze > 1500
+    return "vampiric"
+  :?res.wood > 1500
+    return "cleansing"
+  :?res.tar > 3000
+    return "healing"
+  :?res.stone > res.wood & res.stone > res.bronze
+    return "defensive"
+  :?res.wood > res.stone & res.wood > res.bronze
+    return "cleansing"
+  :?res.bronze > res.stone & res.bronze > res.wood
+    return "vampiric"
+    
+func brewPotion(potion)
+  var ingred = xLookup(potion, potions, ingredients)
+  ?ingred = "wood + wood"
+    brew wood + wood
+  :?ingred = "stone + stone"
+    brew stone + stone
+  :?ingred = "tar + tar"
+    brew tar + tar
+  :?ingred = "bronze + bronze"
+    brew bronze + bronze
+  :?ingred = "wood + stone"
+    brew wood + stone
+  :?ingred = "wood + tar"
+    brew wood + tar
+  :?ingred = "wood + bronze"
+    brew wood + bronze
+  :?ingred = "stone + tar"
+    brew stone + tar
+  :?ingred = "stone + bronze"
+    brew stone + bronze
+  :?ingred = "tar + bronze"
+    brew tar + bronze
+
+func displayFoe(startLine, xStart)
+  var foeName = foe.name
+  var nameIndex = String.IndexOf(foe, foe.name)
+  var nameLength = String.Size(foe.name)
+  var foeSuffix = String.Sub(foe, nameIndex + nameLength)
+  var foeKeywords = String.Split(foeSuffix, true)
+  var numRows = Math.CeilToInt(foeKeywords.Count() / 2)
+  >`@xStart@,@startLine@,#FF0000,Foe: @foeName@ (+@foe.count@)
+  var xOffset = 10
+  for i = 0 .. foeKeywords.Count()-1
+    ?i % 4 = 0
+      startLine++
+      >`@xStart+2@,@startLine@,#CC0000,[@foeKeywords[i]@]
+      xOffset = String.Size(foeKeywords[i])+3
+    :
+      >`@xStart+xOffset+2@,@startLine@,#FF0000,[@foeKeywords[i]@]
+      xOffset = xOffset + String.Size(foeKeywords[i])+3
+  startLine++
+  return startLine
+  
+func isFacingBoss()
+  ?isInRange(0, 35)
+    ?foe = dysangelos | (loc = deadwood & foe = boss) | foe = bolesh | (loc = mushroom & foe = boss) | foe = pallas | foe = bronze_guardian | foe = hrímnir | foe = nagaraja
+      return true
+  return false
+ 
+var leftItem = item.left
+var rightItem = item.right
+func storeEquips()
+  ?String.Size(item.left) > 5
+    leftItem = item.left
+  ?String.Size(item.right) > 5
+    rightItem = item.right
+  
+func restoreEquips()
+  ?String.Size(rightItem) > 5
+    equipR @rightItem@
+  ?String.Size(leftItem) > 5
+    equipL @leftItem@
+    equip @leftItem@
+  
