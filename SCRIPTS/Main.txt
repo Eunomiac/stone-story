@@ -13,7 +13,8 @@ var dmgDebuffThreshold = 7  // Total damage debuff on yourself before switching 
 var healthHammer = "vigor hammer"          // Name of rune hammer enchanted with health bonus
                                            // Can set 'false', but won't take full advantage of defense potions
 var magicRangedWeapon = "vigor staff"      // Name of magical ranged weapon (able to hit physical-immune enemies)
-var lifeStealMeleeWeapon = "vigor sword L" // Name of health-stealing melee weapon 
+var lifeStealMeleeWeapon = "vigor sword L" // Name of health-stealing melee weapon
+var icePillarWeapon = "fire crossbow"      // Name of ranged weapon to use when facing ice pillars in Icy Ridge
 
 var armorShieldA = "compound shield +13"   // Name of "fast armor"-enchanted shield
 var armorShieldAMax = 14                   // Max armor of "fast armor"-enchanted shield
@@ -329,10 +330,10 @@ U.storeEquips()
     activate potion
     
   // --- [BOSS] Armor Check ---
-  ?foe.armor > 0 & U.isCloseAs("melee")
-    U.storeEquips()
+  ?(foe.armor > 0 & U.isCloseAs("melee")) | item.GetCooldown("hammer") > 647
     equip heavy hammer
-    activate R
+    ?item.GetCooldown("hammer") <= 0
+      activate R
 
   // --- [BOSS] Physical-Immune Check ---
   ?foe = immune_to_physical
@@ -419,12 +420,16 @@ U.storeEquips()
 
   // === PICK-POCKET CHECK ===
   ?skeletonArm & item.GetCooldown("skeleton_arm") <= 0 & foe ! spawner & foe.hp <= 10 & U.isCloseAs("close") & (item.GetCooldown("blade") > 0 | foe.count <= (smiteThreshold - 4))
+    U.storeEquips()
     equip skeleton
     HUD.Set("usingRanged", false)
-    U.storeEquips()
     ?buffs.string = pick_pocket
-      ?foe.hp <= 10
+      ?foe.hp <= 10 & item.CanActivate()
         activate R
+      :
+        U.restoreEquips()
+    :
+      U.storeEquips()
 
   // --- [NON-BOSS] Physical-Immune Check ---
   ?foe = immune_to_physical
@@ -434,9 +439,10 @@ U.storeEquips()
   ?foe = ice pillar & U.isCloseAs("ranged") & icePillarWeapon
     equip @icePillarWeapon@
 
-  ?foe = acronian & firstIceWeapon & secondIceWeapon
-    equipR @firstIceWeapon@
-    equipL @secondIceWeapon@
+  ?foe = acronian
+    ?getOffhandWeapon()
+      equipR @getOffhandWeapon()@
+    equipL @getMainWeapon()@
     HUD.Set("usingRanged", false)
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -459,8 +465,8 @@ U.storeEquips()
 ?hp <= (0.25 * maxhp) & (item.potion = healing | item.potion = defensive | item.potion = cleansing | item.potion = vampiric)
   ?item.potion = defensive
     ?item.left ! vigor hammer
-      equipL vigor hammer L
-      HUD.Set("weaponOverride","vigor hammer L")
+      equipL @healthHammer@
+      HUD.Set("weaponOverride",healthHammer)
     :?maxhp > 50
       activate potion
       HUD.Set("weaponOverride",false)
