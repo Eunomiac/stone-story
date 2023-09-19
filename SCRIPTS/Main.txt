@@ -97,10 +97,6 @@ var forcedPotions = [ // If one of these potions is brewed at start of run, do n
 // ================================================  INIT  =====================
 var staffSpeed
 var skeletonArm
-var hasLockedLeft
-var hasLockedRight
-hasLockedLeft = false
-hasLockedRight = false
 
 staffSpeed = U.Get("staffSpeed")
 skeletonArm = U.Get("skeletonArm")
