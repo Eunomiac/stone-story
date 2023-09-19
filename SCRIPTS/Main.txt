@@ -52,7 +52,7 @@ var elemOffHand = [  // Name of second one-handed melee weapon, for double-wield
 ^false,                // POISON (vs. Vigor)
 ^false,                // VIGOR (vs. Aether)
 ^false,                // AETHER (vs. Fire)
-^false,                // FIRE (vs. Ice)
+^"fire talisman",      // FIRE (vs. Ice)
 ^"ice sword *9 D"      // ICE (vs. Poison)
 ] 
 
@@ -97,9 +97,13 @@ var forcedPotions = [ // If one of these potions is brewed at start of run, do n
 // ================================================  INIT  =====================
 var staffSpeed
 var skeletonArm
+var hasLockedLeft
+var hasLockedRight
+hasLockedLeft = false
+hasLockedRight = false
 
-staffSpeed = HUD.Get("staffSpeed")
-skeletonArm = HUD.Get("skeletonArm")
+staffSpeed = U.Get("staffSpeed")
+skeletonArm = U.Get("skeletonArm")
 
 HUD.Init()
 HUD.Display()
@@ -113,18 +117,16 @@ var locPotion = U.xLookup(loc.name, U.locations, locPotions)
 
 // ================================================ TOGGLES ====================
 ?key = bumpLBegin
-  HUD.Toggle("hideHUD")
+  U.Toggle("hideHUD")
 ?key = downBegin
-  staffSpeed = HUD.Toggle("staffSpeed")
+  staffSpeed = U.Toggle("staffSpeed")
 ?key = leftBegin
-  skeletonArm = HUD.Toggle("skeletonArm")
+  skeletonArm = U.Toggle("skeletonArm")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ LOCATION START =============
 ?loc.begin
-  HUD.Set("twoHandedOverride", false)
-  HUD.Set("weaponOverride", false)
-  HUD.Set("shieldOverride", false)
+  U.Reset()
   ?!forcedPotions.Contains(item.potion) & item.potion ! locPotion
     U.brewPotion(locPotion)
 
@@ -214,61 +216,72 @@ func getMainRanged()
 // --- [SHIFT]: Two-Handed or Main Weapon Override 
 ?key = ability1Begin
   ?twoHandedOverride
-    HUD.Set("twoHandedOverride", twoHandedOverride)
+    U.Set("twoHandedOverride", twoHandedOverride)
+    U.lockLeft()
+    U.lockRight()
   :?oneHandedOverride
-    HUD.Set("weaponOverride", oneHandedOverride)
+    U.Set("weaponOverride", oneHandedOverride)
+    U.lockLeft()
 ?key = ability1End
-  HUD.Set("twoHandedOverride", false)
-  HUD.Set("weaponOverride", false)
+  U.unlockLeft()
+  U.Set("weaponOverride", false)
+  ?U.Get("twoHandedOverride")
+    U.unlockRight()
+    U.Set("twoHandedOverride", false)
 
 // --- [CONTROL]: Ranged Weapon Override
 ?key = ability2Begin
   ?loc = haunted
-    HUD.Set("twoHandedOverride", nonMagicRangedOverride) 
+    U.Set("twoHandedOverride", nonMagicRangedOverride)
+    U.lockLeft()
+    U.lockRight()
   :
-    HUD.Set("twoHandedOverride", getMainRanged())
+    U.Set("twoHandedOverride", getMainRanged())
+    U.lockLeft()
+    U.lockRight()
 ?key = ability2End
-  HUD.Set("twoHandedOverride", false)
+  U.Set("twoHandedOverride", false
+    U.unlockLeft()
+    U.unlockRight()
   
 // --- [X]: Shield Override
 ?key = backBegin
-  HUD.Set("weaponOverride", false)
-  HUD.Set("twoHandedOverride", false)
-  HUD.Set("shieldOverride", getMainShield())
+  U.Set("twoHandedOverride", false)
+  U.Set("shieldOverride", getMainShield())
+  U.lockRight()
 ?key = backEnd
-  HUD.Set("shieldOverride", false)
+  U.Set("shieldOverride", false)
+  U.unlockRight()
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ======================================== MAIN LOADOUT INITIALIZATION ========
-HUD.Set("mainWeapon", getMainWeapon())
-HUD.Set("mainShield", getMainShield())
-HUD.Set("mainRanged", getMainRanged())
+U.Set("mainWeapon", getMainWeapon())
+U.Set("mainShield", getMainShield())
+U.Set("mainRanged", getMainRanged())
 
-equipR @getMainShield()@
+U.equipRight(getMainShield())
 ?getOffhandWeapon()
-  equipR @getOffhandWeapon()@
-equipL @getMainWeapon()@
-equip @getMainWeapon()@
-U.storeEquips()
+  U.equipRight(getOffhandWeapon())
+U.equipLeft(getMainWeapon())
+
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ HEAL CHECK: LIFESTEAL ======
 ?hp < maxhp
   ?foe.count = 0 | (foe ! spawner & U.isFarAs("ranged"))
-    equipL ouroboros
+    U.equipLeft("ouroboros")
   :?foe.damage <= 3 & foe ! boss
-    equipL @lifeStealMeleeWeapon@
+    U.equipLeft(lifeStealMeleeWeapon)
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ PICKUP CHECK ===============
 ?pickup.distance < 13
-  equipL star
+  U.equipLeft("star")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ QUARTERSTAFF JUMP CHECK ====
-?staffSpeed & item.GetCooldown("quarterstaff") <= 0 
-^& (foe.count = 0 | U.isFarAs("medium"))
-  equip quarterstaff
+?staffSpeed & item.GetCooldown("quarterstaff") <= 0 & (foe.count = 0 | U.isFarAs("medium")) & item.CanActivate()
+  U.equipLeftUntilAfterState("quarterstaff", 2)
   activate R
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -277,34 +290,25 @@ U.storeEquips()
 ^& (foe ! boss | (!U.isInState(1, 0) | !ai.idle))
   ?foe ! immune_to_ranged & U.isWithin("close", "ranged")
   ^& dmgDebuff <= dmgDebuffThreshold & debuffs.string ! yeti_chill
-    equip @getMainRanged()@
-    HUD.Set("usingRanged", true)
-    U.storeEquips()
-  :
-    HUD.Set("usingRanged", false)
-:
-  HUD.Set("usingRanged", false)
+    U.equipLeft(getMainRanged())
 
 ?foe = AEther & foe = magic_vulnerability & U.isCloseAs("ranged") & magicRangedWeapon = vigor
-  equip @magicRangedWeapon@
-  U.storeEquips()
+  U.equipLeft(magicRangedWeapon)
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ HARVEST CHECK ==============
 ?!staffSpeed & harvest.distance < 9
-  HUD.Set("usingRanged", false)
   ?harvest = Boulder
-    equip Shovel
+    U.equipLeft("Shovel")
   :
-    equip Hatchet
+    U.equipLeft("Hatchet")
     ?item.GetCooldown("hatchet") <= 0 & harvest.distance <= 4
       activate R
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================BARDICHE CHECK ==============
-?foe ! immune_to_physical & foe.hp > 300 & U.isCloseAs("melee")
-^& (item.GetCooldown("bardiche") <= 0 | item.GetCooldown("bardiche") > 730)
-  equip bardiche
+?foe ! immune_to_physical & foe.hp > 300 & U.isCloseAs("melee") & item.GetCooldown("bardiche") <= 0
+  U.equipLeftUntilAfterState("bardiche", 2)
   activate R
 
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -314,54 +318,47 @@ U.storeEquips()
 
   // --- ［BOSS］ Potion Check, More-Aggressive Heal Check ---
   
-  ?HUD.Get("weaponOverride")
-    equipL @HUD.Get("weaponOverride")@
   ?item.potion = cleansing & debuffs.count > 15
     activate potion
-  ?hp < (0.66 * maxhp) & item.potion = defensive & healthHammer
+  ?hp < (0.66 * maxhp) & item.potion = defensive & healthHammer & !U.isLeftLocked()
     ?item.left ! healthHammer
-      equipL @healthHammer@
-      HUD.Set("usingRanged", false)
-      HUD.Set("weaponOverride",healthHammer)
+      U.equipLeft(healthHammer)
+      U.lockLeft()
     :?maxhp > 50
       activate potion
-      HUD.Set("weaponOverride",false)
+      U.unlockLeft()
   :?hp < (0.5 * maxhp) & (item.potion = healing | item.potion = defensive | item.potion = cleansing | item.potion = vampiric)
     activate potion
     
   // --- [BOSS] Armor Check ---
-  ?(foe.armor > 0 & U.isCloseAs("melee")) | item.GetCooldown("hammer") > 647
-    equip heavy hammer
-    ?item.GetCooldown("hammer") <= 0
+  ?(foe.armor > 0 & U.isCloseAs("melee"))
+    U.equipLeft("heavy hammer")
+    ?item.GetCooldown("hammer") <= 0 & item.CanActivate()
+      U.equipLeftUntilAfterState("heavy hammer", 2)
       activate R
 
   // --- [BOSS] Physical-Immune Check ---
   ?foe = immune_to_physical
-    equip @magicRangedWeapon@
+    U.equipLeft(magicRangedWeapon)
 
   // --- ［BOSS］ Debuff Checks ---
   ?(foe ! pallas | foe ! phase2) & foe.buffs.string ! protection & U.isCloseAs("close")
-    U.storeEquips()
     ?foe.debuffs.string ! damage & foe ! immune_to_debuff_damage
-      equipR cultist mask
-      equipL dp
-      HUD.Set("usingRanged", false)
+      U.equipRight("cultist mask")
+      U.equipLeft("dp")
     :?foe.debuffs.string ! dot
-      equipR cultist mask
-      equipL dF
-      HUD.Set("usingRanged", false)
-    :?foe.debuffs.string ! chill & foe ! immune_to_debuff_chill
-      equipR cultist mask
-      equipL I
-      HUD.Set("usingRanged", false)
-    :?foe.debuffs.string ! feeble & item.GetCooldown("mask") <= 0
-      equipR cultist mask
+      U.equipRight("cultist mask")
+      U.equipLeft("dF")
+    :?U.getFoeDebuffCount("Chill") < 6 & foe ! immune_to_debuff_chill
+      U.equipRight("cultist mask")
+      U.equipLeft("I")
+    :?foe.debuffs.string ! feeble & item.GetCooldown("mask") <= 0 & item.CanActivate()
+      U.equipRightUntilAfterState("cultist mask", 2)
       activate R
-      HUD.Set("usingRanged", false)
-    :?foe.maxarmor > 50 & foe.debuffs.string ! fatigue & item.GetCooldown("hammer") <= 0
-      equip heavy hammer
+    :?foe.maxarmor > 50 & foe.debuffs.string ! fatigue & item.GetCooldown("hammer") <= 0 & item.CanActivate()
+      U.equipRight("cultist mask")
+      U.equipLeftUntilAfterState("heavy hammer", 2)
       activate R
-      HUD.Set("usingRanged", false)
 
   // --- [BOSS] Offensive Potion Check ---
   ?foe = bronze_guardian & U.isInState(32, 30) & (item.potion = strength | item.potion = berserk)
@@ -373,26 +370,21 @@ U.storeEquips()
 
   // --- [BOSS] Special Weapon Check ---
   ?foe = bronze_guardian & U.isInState(33, 0) & foe.armor > 0 & item.GetCooldown("hammer") <= 0
-    equip heavy hammer
+    U.equipLeftUntilAfterState("heavy hammer", 2)
     activate R
-    HUD.Set("usingRanged", false)
   ?foe = bolesh & foe.state = 1 & foe.time < 210
-    equipR @getMainShield()@
-    equipL @getMainWeapon()@
-    HUD.Set("usingRanged", false)
+    U.equipLeft(getMainWeapon())
+    U.equipRight(getMainShield())
   ?foe = dysangelos & foe = phase1 & foe.state >= 100
-    equipR @getMainShield()@
-    equipL @getMainWeapon()@
-    HUD.Set("usingRanged", false)
+    U.equipLeft(getMainWeapon())
+    U.equipRight(getMainShield())
   ?foe = nagaraja & foe.state > 1
-    ?getOffhandWeapon()
-      equipR @getOffhandWeapon()@
-    equipL @getMainWeapon()@
-    HUD.Set("usingRanged", false)
+    U.equipLeft(getMainWeapon())
   ?foe = pallas & foe.state = 0
-    equipR @getMainShield()@
-    equipL @getMainWeapon()@
-    HUD.Set("usingRanged", false)
+    U.equipLeft(getMainWeapon())
+    U.equipRight(getMainShield())
+  ?getOffhandWeapon() & foe.state > 1
+    U.equipRight(getOffhandWeapon())
   
   // --- [BOSS] Dodge Check ---
   ?item.GetCooldown("mind") <= 0
@@ -415,65 +407,54 @@ U.storeEquips()
     
   // --- [NON-BOSS] Armor Check ---
   ?foe.armor > 100 & U.isCloseAs("melee")
-    equip heavy hammer
-    HUD.Set("usingRanged", false)
+    U.equipLeft("heavy hammer")
 
   // === PICK-POCKET CHECK ===
   ?skeletonArm & item.GetCooldown("skeleton_arm") <= 0 & foe ! spawner & foe.hp <= 10 & U.isCloseAs("close") & (item.GetCooldown("blade") > 0 | foe.count <= (smiteThreshold - 4))
-    U.storeEquips()
+    U.storeEquipLeft("")
     equip skeleton
-    HUD.Set("usingRanged", false)
     ?buffs.string = pick_pocket
       ?foe.hp <= 10 & item.CanActivate()
         activate R
       :
-        U.restoreEquips()
+        U.equipLeft(U.getStoredLeft())
     :
-      U.storeEquips()
+      U.equipLeft("skeleton)
 
   // --- [NON-BOSS] Physical-Immune Check ---
   ?foe = immune_to_physical
-    equip @magicRangedWeapon@
+    U.equipLeft(magicRangedWeapon)
 
   // --- [NON-BOSS] Ice Pillar Check ---
   ?foe = ice pillar & U.isCloseAs("ranged") & icePillarWeapon
-    equip @icePillarWeapon@
+    U.equipLeft(icePillarWeapon)
 
   ?foe = acronian
     ?getOffhandWeapon()
-      equipR @getOffhandWeapon()@
-    equipL @getMainWeapon()@
-    HUD.Set("usingRanged", false)
+      U.equipRight(getOffhandWeapon())
+    U.equipLeft(getMainWeapon())
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
-// ======================[[COMBAT LOGIC LOOP: BOSS FIGHT]]======================
-?U.isWithin("close","medium") & !HUD.Get("usingRanged")
+// ======================[[COMBAT LOGIC LOOP: NON - BOSS FIGHT]]======================
+?U.isWithin("close","medium") & !U.Get("usingRanged")
   ? item.GetCooldown("bash") <= 0
-    equipR bash
+    U.equipRight("bash")
   :
-    equipR dash
+    U.equipRight("dash")
 
 // === BLADE OF THE FALLEN GOD CHECK ===
-?item.GetCooldown("blade") <= 0 & foe.count > smiteThreshold & U.isCloseAs("screen")
-  equip blade of the fallen god
+?item.GetCooldown("blade") <= 0 & foe.count > smiteThreshold & U.isCloseAs("screen") & item.CanActivate()
+  U.equipLeft("blade of the fallen god")
   activate R
-
-?HUD.Get("weaponOverride")
-  equipL @HUD.Get("weaponOverride")@
 
 // === HEAL CHECK: POTION ===
 ?hp <= (0.25 * maxhp) & (item.potion = healing | item.potion = defensive | item.potion = cleansing | item.potion = vampiric)
   ?item.potion = defensive
     ?item.left ! healthHammer
-      equipL @healthHammer@
-      HUD.Set("weaponOverride",healthHammer)
+      U.equipLeft(healthHammer)
+      U.lockLeft(healthHammer)
     :?maxhp > 50
       activate potion
-      HUD.Set("weaponOverride",false)
+      U.unlockLeft()
   :
     activate potion
-
-?HUD.Get("shieldOverride")
-  equipR @HUD.Get("shieldOverride")@
-?HUD.Get("twoHandedOverride")
-  equip @HUD.Get("twoHandedOverride")@
