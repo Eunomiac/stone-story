@@ -1,278 +1,165 @@
+// === KEY REFERENCE ===
 
+// leftBegin        A or ←
+// rightBegin        D or →
+// upBegin            W or ↑
+// downBegin        S or ↓
+// primaryBegin        LMB, Return
+// backBegin        X
+// ability1Begin    Shift
+// ability2Begin    Control
+// bumpLBegin        Z
+// bumpRBegin        C
 
-func Set(key, val)
-  storage.Set(key, val)
-  return val
+var U = import Utilities
+var toSecs = U.toSeconds(30)
 
-func Get(key)
-  return storage.Get(key)
+func Init()
+  ?!storage.Has("staffSpeed")
+    U.Set("staffSpeed", true)
+  ?!storage.Has("hideHUD")
+    U.Set("hideHUD", false)
+  ?!storage.Has("skeletonArm")
+    U.Set("skeletonArm", true)
 
-func Toggle(key)
-  Set(key, !Get(key))
-  return Get(key)
+func printRight(lNum, color, message, minSize)
+  message = message + ""
+  var xRight = 87
+  var mSize = string.Size(message)
+  ?minSize > mSize
+    mSize = minSize
+  var xStart = xRight - mSize
+  >`@xStart@,@lNum@,@color@,@message@
   
-func Cycle(key, vals)
-  var curVal = Get(key)
-  var index = vals.IndexOf(curVal)
-  ?index = vals.Count()
-    Set(key, vals[0])
+
+func Display()
+  // === HUD Info Display ===
+  var xStart = 0
+  var yStart = 6
+  var lineNum = yStart
+  var rightYStart = 0
+  var rightLineNum = rightYStart
+  
+  ?U.Get("hideHUD")
+    printRight(rightLineNum,"#FF0000","[Z] HUD", 0)
+    return
   :
-    Set(key, vals[index])
+    printRight(rightLineNum,"#FF0000","[Z] HUD", 16)
+    rightLineNum++
 
-func Reset()
-  Set("twoHandedOverride", false)
-  Set("weaponOverride", false)
-  Set("shieldOverride", false)
- 
-func breakBuff(buff)
-  var buffParts = string.Split(buff, ":")
-  buffParts[2] = int.Parse(buffParts[2])
-  buffParts[3] = int.Parse(buffParts[3])
-  return [buffParts[1], buffParts[2], buffParts[3]]
-  
-func getBuffParts(buffName, buffString)
-  var buffStrings = string.split(buffString, ",")
-  for buffStr : buffStrings
-    var buffParts = string.Split(buffStr, ":")
-    ?Type(buffParts) = Type([]) & buffParts.Count() = 4
-      ?string.IndexOf(buffParts[1], buffName) > -1
-        return [int.Parse(buffParts[2]), int.Parse(buffParts[3])]
-  return [0, 0]
-
-func xLookup(val, arr1, arr2)
-  var index = arr1.IndexOf(val)
-  ?index > -1
-    return arr2[index]
+  ?U.Get("staffSpeed")
+    printRight(rightLineNum,"#00FF00","[S] Speed", 16)
+    rightLineNum++
   :
-    return false
+    printRight(rightLineNum,"#FF0000","[S] Speed", 16)
+    rightLineNum++
 
-func getBuffCount(buffName)
-  return getBuffParts(buffName, buffs.string)[0]
-
-func getDebuffCount(buffName)
-  return getBuffParts(buffName, debuffs.string)[0]
-  
-func getFoeDebuffCount(buffName)
-  return getBuffParts(buffName, foe.debuffs.string)[0]
-
-func getArmor()
-  return math.Round((armor * 10) + armor.f) / 10
-
-var ranges = ["melee", "close", "medium", "ranged", "screen"]
-var units = [5, 11, 16, 25, 35]
-
-func isCloseAs(range)
-  return foe.distance <= xLookup(range, ranges, units)
-
-func isFarAs(range)
-  return foe.distance >= xLookup(range, ranges, units)
-
-func isWithin(rangeA, rangeB)
-  var unitA = xLookup(rangeA, ranges, units)
-  var unitB = xLookup(rangeB, ranges, units)
-  return isInRange(unitA, unitB)
-
-func isInRange(min, max)
-  ?max > min
-    return foe.distance >= min & foe.distance <= max
+  ?U.Get("skeletonArm")
+    printRight(rightLineNum,"#00FF00","[A] Skeleton Arm", 16)
+    rightLineNum++
   :
-    return foe.distance >= min
+    printRight(rightLineNum,"#FF0000","[A] Skeleton Arm", 16)
+    rightLineNum++
 
-func isInState(stateNum, stateTime)
-  return foe.state = stateNum & foe.time >= stateTime
+  rightLineNum++
 
-func toSeconds(frameCount)
-  return math.Round(frameCount / 3) / 10
-
-var locations = ["Rocky Plateau", "Deadwood Canyon", "Caves of Fear", "Mushroom Forest", "Haunted Halls",  "Boiling Mine", "Icy Ridge", "Temple"]
-var locElems = ["none",  "none", "poison", "vigor", "aether", "fire", "ice", "poison"]
-var elements = ["none", "poison", "vigor",  "aether", "fire", "ice"]
-var counterElements = ["none", "vigor", "aether", "fire", "ice", "poison"]
-
-var potions = ["experience","strength","healing","lightning","invisibility","cleansing","berserk","defensive","lucky","vampiric"]
-var ingredients = ["wood + wood", "stone + stone", "tar + tar", "bronze + bronze", "wood + stone", "wood + tar", "wood + bronze", "stone + tar", "stone + bronze", "tar + bronze"]
-
-func getHealingPotion()
-  ?res.stone > 1500
-    return "defensive"
-  :?res.bronze > 1500
-    return "vampiric"
-  :?res.wood > 1500
-    return "cleansing"
-  :?res.tar > 3000
-    return "healing"
-  :?res.stone > res.wood & res.stone > res.bronze
-    return "defensive"
-  :?res.wood > res.stone & res.wood > res.bronze
-    return "cleansing"
-  :?res.bronze > res.stone & res.bronze > res.wood
-    return "vampiric"
+  ?U.Get("mainWeapon")
+    printRight(rightLineNum, "#00FFFF", string.Join("", [" <",U.Get("mainWeapon"),"> "]), 20)
+    rightLineNum++
     
-func brewPotion(potion)
-  var ingred = xLookup(potion, potions, ingredients)
-  ?ingred = "wood + wood"
-    brew wood + wood
-  :?ingred = "stone + stone"
-    brew stone + stone
-  :?ingred = "tar + tar"
-    brew tar + tar
-  :?ingred = "bronze + bronze"
-    brew bronze + bronze
-  :?ingred = "wood + stone"
-    brew wood + stone
-  :?ingred = "wood + tar"
-    brew wood + tar
-  :?ingred = "wood + bronze"
-    brew wood + bronze
-  :?ingred = "stone + tar"
-    brew stone + tar
-  :?ingred = "stone + bronze"
-    brew stone + bronze
-  :?ingred = "tar + bronze"
-    brew tar + bronze
+  ?U.Get("mainShield")
+    printRight(rightLineNum, "#0000FF", string.Join("", ["[",U.Get("mainShield"),"]"]), 20)
+    rightLineNum++
 
-func displayFoe(startLine, xStart)
-  var foeName = foe.name
-  var nameIndex = String.IndexOf(foe, foe.name)
-  var nameLength = String.Size(foe.name)
-  var foeSuffix = String.Sub(foe, nameIndex + nameLength)
-  var foeKeywords = String.Split(foeSuffix, true)
-  var numRows = Math.CeilToInt(foeKeywords.Count() / 2)
-  >`@xStart@,@startLine@,#FF0000,Foe: @foeName@ (+@foe.count@)
-  var xOffset = 10
-  for i = 0 .. foeKeywords.Count()-1
-    ?i % 4 = 0
-      startLine++
-      >`@xStart+2@,@startLine@,#CC0000,[@foeKeywords[i]@]
-      xOffset = String.Size(foeKeywords[i])+3
-    :
-      >`@xStart+xOffset+2@,@startLine@,#FF0000,[@foeKeywords[i]@]
-      xOffset = xOffset + String.Size(foeKeywords[i])+3
-  startLine++
-  return startLine
+  ?U.Get("mainRanged")
+    printRight(rightLineNum, "#00FFFF", string.Join("", ["> ",U.Get("mainRanged")," <"]), 20)
+    rightLineNum++
   
-func isFacingBoss()
-  ?isInRange(0, 35)
-    ?foe = dysangelos | (loc = deadwood & foe = boss) | foe = bolesh | (loc = mushroom & foe = boss) | foe = pallas | foe = bronze_guardian | foe = hrímnir | foe = nagaraja
-      return true
-  return false
- 
-func isRangedWeapon(itemid)
-  return itemid = crossbow | itemid = wand | itemid = talisman | itemid = staff | itemid = ouroboros
-
-
-var leftItem = item.left
-var rightItem = item.right
-
-func storeEquipLeft(itemid)
-  ?isLeftLocked()
-    return
-  ?String.Size(itemid) > 2
-    Set("leftItem", itemid)
-  :?String.Size(item.left) > 2
-    Set("leftItem", item.left)
+  ?U.Get("twoHandedOverride")
+    printRight(rightLineNum, "#FF00FF", string.Join("", ["<<",U.Get("twoHandedOverride"),">>"]), 30)
+    rightLineNum++
   :
-    Set("leftItem", false)
-
-func storeEquipRight(itemid)
-  ?isRightLocked()
-    return
-  ?String.Size(itemid) > 2
-    Set("rightItem", itemid)
-  :?String.Size(item.right) > 2
-    Set("rightItem", item.right)
+    ?U.Get("weaponOverride")
+      printRight(rightLineNum, "#FF00FF", string.Join("", [" <",U.Get("weaponOverride"),"> "]), 30)
+      rightLineNum++
+    ?U.Get("shieldOverride")
+      printRight(rightLineNum, "#00FFFF", string.Join("", ["[",U.Get("shieldOverride"),"]"]), 30)
+      rightLineNum++
+      
+  rightLineNum++
+  
+  printRight(rightLineNum, "#FF00FF", "I: " + screen.i + ", X: " + screen.x, 0)
+  rightLineNum++
+  
+  var aiColor = #CC0000
+  var idleColor = #CC0000
+  var pausedColor = #CC0000
+  var walkColor = #CC0000
+  var faceColor = #FF00FF
+  
+  >`@xStart@,@lineNum@,#00FF00,Location: @loc.name@ @loc.stars@*
+  lineNum++
+  ?pickup.distance < 9999
+    >`@xStart@,@lineNum@,#00FF00,Pickup: @pickup@ (@pickup.distance@)
+    lineNum++
+  ?harvest.distance < 9999
+    >`@xStart@,@lineNum@,#00FF00,Harvest: @harvest@ (@harvest.distance@)
+    lineNum++
+  
+  ?foe.damage > -1
+    lineNum = U.displayFoe(lineNum, xStart)
+    >`@xStart@,@lineNum@,#DD0000,Lv@foe.level@ = @foe.distance@, Dmg: @foe.damage@, State: @foe.state@:@U.toSeconds(foe.time)@
+    lineNum++
+    >`@xStart@,@lineNum@,#DD0000,+ @foe.buffs.string@
+    lineNum++
+    >`@xStart@,@lineNum@,#009900,- @foe.debuffs.string@
+    lineNum++
+  
+  lineNum++
+  >`@xStart@,@lineNum@,#00FF00,+ @buffs.string@
+  lineNum++
+  >`@xStart@,@lineNum@,#FF0000,- @debuffs.string@
+  lineNum++
+  >`@xStart@,@lineNum@,#FF00FF,Sk @U.toSeconds(item.GetCooldown("skeleton_arm"))@
+  >`@xStart + 8@,@lineNum@,#FF00FF,BF @U.toSeconds(item.GetCooldown("blade"))@
+  >`@xStart + 16@,@lineNum@,#FF00FF,Bh @U.toSeconds(item.GetCooldown("bash"))@
+  >`@xStart + 23@,@lineNum@,#FF00FF,M @U.toSeconds(item.GetCooldown("mind"))@
+  lineNum++
+  >`@xStart@,@lineNum@,#FF00FF, Q @U.toSeconds(item.GetCooldown("quarterstaff"))@
+  >`@xStart + 8@,@lineNum@,#FF00FF,Bd @U.toSeconds(item.GetCooldown("bardiche"))@
+  >`@xStart + 16@,@lineNum@,#FF00FF, H @U.toSeconds(item.GetCooldown("hammer"))@
+  lineNum++
+  
+  ?ai.enabled
+    aiColor = #00FF00
   :
-    Set("rightItem", false)
-
-func getStoredLeft()
-  ?Get("weaponOverride")
-    return Get("weaponOverride")
-  return Get("leftItem")
-func getStoredRight()
-  return Get("rightItem")
-    
-func lockLeft()
-  Set("isLeftLocked", true)
-func lockLeftUntilAfterState(stateNum)
-  Set("isLeftLocked", stateNum)
-func unlockLeft()
-  Set("isLeftLocked", false)
+    aiColor = #CC0000
+  ?ai.idle
+    idleColor = #00FF00
+  :
+    idleColor = #CC0000
+  ?ai.paused
+    pausedColor = #00FF00
+  :
+    pausedColor = #CC0000
+  ?ai.walking
+    walkColor = #00FF00
+  :
+    walkColor = #CC0000
   
-func lockRight()
-  Set("isRightLocked", true)
-func lockRightUntilAfterState(stateNum)
-  Set("isRightLocked", stateNum)
-func unlockRight()
-  Set("isRightLocked", false)
+  lineNum = 25
+  var xStartPushed = 59 // xStart + 10
+  >`@xStartPushed@,@lineNum@,@aiColor@,[AI]
+  >`@xStartPushed + 5@,@lineNum@,@idleColor@,[Idle]
+  >`@xStartPushed + 12@,@lineNum@,@pausedColor@,[Paused]
+  >`@xStartPushed + 21@,@lineNum@,@walkColor@,[Walk]
   
-func isLeftLocked()
-  ?Get("isLeftLocked") = true | Get("isLeftLocked") = false
-    return Get("isLeftLocked")
-  return Get("isLeftLocked") < item.left.state
-func isRightLocked()
-  ?Get("isRightLocked") = true | Get("isRightLocked") = false
-    return Get("isRightLocked")
-  return Get("isRightLocked") < item.right.state
+  >`30,4,#FF00FF,
+  >`30,5,#FF00FF,
+  >`30,6,#FF00FF,
   
-func equipRight(itemid)
-  ?isRightLocked()
-    equipR @getStoredRight()@
-    return
+  
+  
+  lineNum = yStart
 
-  ?Get("shieldOverride")
-    equipRight(Get("shieldOverride"))
-    lockRight()
-    return
-
-  ?String.Size(itemid) > 2
-    storeEquipRight(itemid)
-  :?String.Size(item.right) > 2
-    storeEquipRight(item.right)
-
-  ?String.Size(getStoredRight()) > 2
-    equipR @getStoredRight()@
-
-func equipLeft(itemid)
-  ?isLeftLocked()
-    equipL @getStoredLeft()@
-    equip @getStoredLeft()@
-    return
-
-  ?Get("weaponOverride")
-    equipLeft(Get("weaponOverride"))
-    lockLeft()
-    return
-  ?Get("twoHandedOverride")    
-    equipLeft(Get("twoHandedOverride"))
-    lockLeft()
-    lockRight()
-    return
-    
-  unlockLeft()
-
-  ?String.Size(itemid) > 2
-    storeEquipLeft(itemid)
-  :?String.Size(item.left) > 2
-    storeEquipLeft(item.left)
-    
-  var storedLeft = getStoredLeft()
-
-  Set("usingRanged", isRangedWeapon(storedLeft))
-
-  ?String.Size(storedLeft) > 2
-    equipL @storedLeft@
-    equip @storedLeft@
-    
-func equipLeftUntilAfterState(itemid, state)
-  ?isLeftLocked()
-    return
-  ?String.Size(itemid) > 2
-    equipLeft(itemid)
-    lockLeftUntilAfterState(2)     
-        
-func equipRightUntilAfterState(itemid, state)
-  ?isRightLocked()
-    return
-  ?String.Size(itemid) > 2
-    equipRight(itemid)
-    lockRightUntilAfterState(2)   
+import Pets
