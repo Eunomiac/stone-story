@@ -464,7 +464,7 @@ U.storeEquips()
 // === HEAL CHECK: POTION ===
 ?hp <= (0.25 * maxhp) & (item.potion = healing | item.potion = defensive | item.potion = cleansing | item.potion = vampiric)
   ?item.potion = defensive
-    ?item.left ! vigor hammer
+    ?item.left ! healthHammer
       equipL @healthHammer@
       HUD.Set("weaponOverride",healthHammer)
     :?maxhp > 50
