@@ -1,46 +1,4 @@
-// === KEY REFERENCE ===
-
-// leftBegin        A or ←
-// rightBegin        D or →
-// upBegin            W or ↑
-// downBegin        S or ↓
-// primaryBegin        LMB, Return
-// backBegin        X
-// ability1Begin    Shift
-// ability2Begin    Control
-// bumpLBegin        Z
-// bumpRBegin        C
-
 var U = import Utilities
-var toSecs = U.toSeconds(30)
-
-func Init()
-  ?!storage.Has("staffSpeed")
-    storage.Set("staffSpeed", true)
-  ?!storage.Has("hideHUD")
-    storage.Set("hideHUD", false)
-  ?!storage.Has("skeletonArm")
-    storage.Set("skeletonArm", true)
-
-func Set(key, val)
-  storage.Set(key, val)
-  return val
-
-func Get(key)
-  return storage.Get(key)
-
-func Toggle(key)
-  storage.Set(key, !storage.Get(key))
-  return storage.Get(key)
-  
-func Cycle(key, vals)
-  var curVal = storage.Get(key)
-  var index = vals.IndexOf(curVal)
-  ?index = vals.Count()
-    storage.Set(key, vals[0])
-  :
-    storage.Set(key, vals[index])
-   
 
 func printRight(lNum, color, message, minSize)
   message = message + ""
@@ -51,72 +9,61 @@ func printRight(lNum, color, message, minSize)
   var xStart = xRight - mSize
   >`@xStart@,@lNum@,@color@,@message@
   
+func printCooldown(x, y, twoChar, key)
+  var displayString = "  "
+  var color = "#FF00FF"
+  ?item.GetCooldown(key) > 0
+    color = "#FF00FF"
+    ?item.left = key | item.right = key
+      displayString = item.left.state + "-"
+  :
+    color = "#440044"
+  displayString = displayString + twoChar
+  
+  >`@x@,@y@,@color@,@displayString@ @U.toSeconds(item.GetCooldown(key))@
+  
+func parseBuffString(buffString)
+  var fullDisplayString = false
+  var buffStrings = string.split(buffString, ",")
+  for buffStr : buffStrings
+    var buffDisplayString = ""
+    var buffParts = string.Split(buffStr, ":")
+    ?Type(buffParts) = Type([]) & buffParts.Count() = 4
+      var buffName = buffParts[1]
+      var nameParts = string.split(buffName, "_")
+      var shortName = ""
+      for namePart : nameParts
+        ?string.Equals(namePart, "debuff")
+          shortName = shortName + "d."
+        :?string.Equals(namePart, "duration")
+          shortName = shortName + "dur."
+        :?string.Equals(namePart, "damage")
+          shortName = shortName + "dmg."
+        :
+          shortName = shortName + namePart + "."
+      buffDisplayString = string.Sub(shortName, 0, string.Size(shortName) - 1)
+      ?buffParts[2]
+        buffDisplayString = buffDisplayString + ": " + buffParts[2]
+      ?buffParts[3]
+        buffDisplayString = buffDisplayString + ":" + U.toSeconds(int.Parse(buffParts[3]))
+      ?fullDisplayString
+        fullDisplayString = string.Join(",", [fullDisplayString, buffDisplayString])
+      :
+        fullDisplayString = buffDisplayString
+  ?fullDisplayString = false
+    return ""
+  return fullDisplayString
 
 func Display()
   // === HUD Info Display ===
   var xStart = 0
   var yStart = 6
   var lineNum = yStart
-  var rightYStart = 0
-  var rightLineNum = rightYStart
-  
-  ?storage.Get("hideHUD")
-    printRight(rightLineNum,"#FF0000","[Z] HUD", 0)
+
+  ?U.Get("hideHUD")
+    printRight(0,"#FF0000","[Z] HUD", 0)
     return
-  :
-    printRight(rightLineNum,"#FF0000","[Z] HUD", 16)
-    rightLineNum++
-
-  ?storage.Get("staffSpeed")
-    printRight(rightLineNum,"#00FF00","[S] Speed", 16)
-    rightLineNum++
-  :
-    printRight(rightLineNum,"#FF0000","[S] Speed", 16)
-    rightLineNum++
-
-  ?storage.Get("skeletonArm")
-    printRight(rightLineNum,"#00FF00","[A] Skeleton Arm", 16)
-    rightLineNum++
-  :
-    printRight(rightLineNum,"#FF0000","[A] Skeleton Arm", 16)
-    rightLineNum++
-
-  rightLineNum++
-
-  ?storage.Get("mainWeapon")
-    printRight(rightLineNum, "#00FFFF", string.Join("", [" <",storage.Get("mainWeapon"),"> "]), 20)
-    rightLineNum++
     
-  ?storage.Get("mainShield")
-    printRight(rightLineNum, "#0000FF", string.Join("", ["[",storage.Get("mainShield"),"]"]), 20)
-    rightLineNum++
-
-  ?storage.Get("mainRanged")
-    printRight(rightLineNum, "#00FFFF", string.Join("", ["> ",storage.Get("mainRanged")," <"]), 20)
-    rightLineNum++
-  
-  ?storage.Get("twoHandedOverride")
-    printRight(rightLineNum, "#FF00FF", string.Join("", ["<<",storage.Get("twoHandedOverride"),">>"]), 30)
-    rightLineNum++
-  :
-    ?storage.Get("weaponOverride")
-      printRight(rightLineNum, "#FF00FF", string.Join("", [" <",storage.Get("weaponOverride"),"> "]), 30)
-      rightLineNum++
-    ?storage.Get("shieldOverride")
-      printRight(rightLineNum, "#00FFFF", string.Join("", ["[",storage.Get("shieldOverride"),"]"]), 30)
-      rightLineNum++
-      
-  rightLineNum++
-  
-  printRight(rightLineNum, "#FF00FF", "I: " + screen.i + ", X: " + screen.x, 0)
-  rightLineNum++
-  
-  var aiColor = #CC0000
-  var idleColor = #CC0000
-  var pausedColor = #CC0000
-  var walkColor = #CC0000
-  var faceColor = #FF00FF
-  
   >`@xStart@,@lineNum@,#00FF00,Location: @loc.name@ @loc.stars@*
   lineNum++
   ?pickup.distance < 9999
@@ -130,25 +77,102 @@ func Display()
     lineNum = U.displayFoe(lineNum, xStart)
     >`@xStart@,@lineNum@,#DD0000,Lv@foe.level@ = @foe.distance@, Dmg: @foe.damage@, State: @foe.state@:@U.toSeconds(foe.time)@
     lineNum++
-    >`@xStart@,@lineNum@,#DD0000,+ @foe.buffs.string@
+    >`@xStart@,@lineNum@,#DD0000,+ @parseBuffString(foe.buffs.string)@
     lineNum++
-    >`@xStart@,@lineNum@,#009900,- @foe.debuffs.string@
+    >`@xStart@,@lineNum@,#009900,- @parseBuffString(foe.debuffs.string)@
     lineNum++
   
   lineNum++
-  >`@xStart@,@lineNum@,#00FF00,+ @buffs.string@
+  >`@xStart@,@lineNum@,#00FF00,+ @parseBuffString(buffs.string)@
   lineNum++
-  >`@xStart@,@lineNum@,#FF0000,- @debuffs.string@
+  >`@xStart@,@lineNum@,#FF0000,- @parseBuffString(debuffs.string)@
+  
+  lineNum = 23
+   
+  printCooldown(xStart, lineNum, ">Q", "quarterstaff")
+  printCooldown(xStart + 8, lineNum, "<<", "mind")
+  printCooldown(xStart + 16, lineNum, ">>", "bash")
   lineNum++
-  >`@xStart@,@lineNum@,#FF00FF,Sk @U.toSeconds(item.GetCooldown("skeleton_arm"))@
-  >`@xStart + 8@,@lineNum@,#FF00FF,BF @U.toSeconds(item.GetCooldown("blade"))@
-  >`@xStart + 16@,@lineNum@,#FF00FF,Bh @U.toSeconds(item.GetCooldown("bash"))@
-  >`@xStart + 23@,@lineNum@,#FF00FF,M @U.toSeconds(item.GetCooldown("mind"))@
+  
+  printCooldown(xStart, lineNum, "BG", "blade")
+  printCooldown(xStart + 8, lineNum, " M", "mask")
+  printCooldown(xStart + 16, lineNum, " H", "hammer")
   lineNum++
-  >`@xStart@,@lineNum@,#FF00FF, Q @U.toSeconds(item.GetCooldown("quarterstaff"))@
-  >`@xStart + 8@,@lineNum@,#FF00FF,Bd @U.toSeconds(item.GetCooldown("bardiche"))@
-  >`@xStart + 16@,@lineNum@,#FF00FF, H @U.toSeconds(item.GetCooldown("hammer"))@
+  
+  printCooldown(xStart, lineNum, "Sk", "skeleton_arm")
+  printCooldown(xStart + 8, lineNum, " B", "bardiche")
+  printCooldown(xStart + 16, lineNum, " T", "fire_talisman")
   lineNum++
+  
+  var rightYStart = 0
+  var rightLineNum = rightYStart
+ 
+  printRight(rightLineNum,"#00FF00","[Z] HUD", 16)
+  rightLineNum++
+
+  ?U.Get("staffSpeed")
+    printRight(rightLineNum,"#00FF00","[S] Speed", 16)
+    rightLineNum++
+  :
+    printRight(rightLineNum,"#FF0000","[S] Speed", 16)
+    rightLineNum++
+
+  ?U.Get("skeletonArm")
+    printRight(rightLineNum,"#00FF00","[A] Skeleton Arm", 16)
+    rightLineNum++
+  :
+    printRight(rightLineNum,"#FF0000","[A] Skeleton Arm", 16)
+    rightLineNum++
+
+  ?U.Get("isRangedBlocked")
+    printRight(rightLineNum,"#00FF00","[C] Melee Only", 16)
+    rightLineNum++
+  :
+    printRight(rightLineNum,"#FF0000","[C] Melee Only", 16)
+    rightLineNum++
+
+  rightLineNum++
+  
+  var oneHandedColor = #00FFFF
+
+  ?U.Get("assignedBoth") ! false
+    oneHandedColor = #999999
+    printRight(rightLineNum, "#00FFFF", "[<>] " + U.Get("assignedBoth"), 27)
+    printRight(rightLineNum + 1, "#00BBBB", U.Get("bothReason"), 25)
+  :
+    oneHandedColor = #00FFFF
+  rightLineNum++
+  rightLineNum++
+
+  ?U.getCounterElement()
+    printRight(rightLineNum, "#FF00FF", "Counter Element: " + String.Capitalize(U.getCounterElement()), 23)
+  rightLineNum++
+
+  ?U.Get("assignedLeft") ! false
+    printRight(rightLineNum, oneHandedColor, "[ >] " + U.Get("assignedLeft"), 27)
+    printRight(rightLineNum + 1, oneHandedColor, U.Get("leftReason"), 25)
+  rightLineNum++
+  rightLineNum++
+
+  ?U.Get("assignedRight") ! false
+    printRight(rightLineNum, oneHandedColor, "[< ] " + U.Get("assignedRight"), 27)
+    printRight(rightLineNum + 1, oneHandedColor, U.Get("rightReason"), 25)
+  rightLineNum++
+  rightLineNum++
+  
+  ?U.Get("isActivating")
+    printRight(rightLineNum, "#FF00FF", "ACTIVATING: [" + U.Get("isActivating") + "]", 15)
+  rightLineNum++      
+      
+  rightLineNum = 24
+  printRight(rightLineNum, "#FF00FF", "I: " + screen.i + ", X: " + screen.x, 0)
+  rightLineNum++
+  
+  var aiColor = #CC0000
+  var idleColor = #CC0000
+  var pausedColor = #CC0000
+  var walkColor = #CC0000
+  var faceColor = #FF00FF
   
   ?ai.enabled
     aiColor = #00FF00
@@ -167,19 +191,13 @@ func Display()
   :
     walkColor = #CC0000
   
-  lineNum = 25
   var xStartPushed = 59 // xStart + 10
-  >`@xStartPushed@,@lineNum@,@aiColor@,[AI]
-  >`@xStartPushed + 5@,@lineNum@,@idleColor@,[Idle]
-  >`@xStartPushed + 12@,@lineNum@,@pausedColor@,[Paused]
-  >`@xStartPushed + 21@,@lineNum@,@walkColor@,[Walk]
-  
-  >`30,4,#FF00FF,
-  >`30,5,#FF00FF,
-  >`30,6,#FF00FF,
-  
-  
+  >`@xStartPushed@,@rightLineNum@,@aiColor@,[AI]
+  >`@xStartPushed + 5@,@rightLineNum@,@idleColor@,[Idle]
+  >`@xStartPushed + 12@,@rightLineNum@,@pausedColor@,[Paused]
+  >`@xStartPushed + 21@,@rightLineNum@,@walkColor@,[Walk]
   
   lineNum = yStart
+  rightLineNum = rightYStart
 
 import Pets
