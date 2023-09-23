@@ -1,30 +1,30 @@
 // === Cooldown String Reference ===
-//     Æther Talisman		"aether_talisman"
-//     Bardiche				"bardiche"
-//     Bashing Shield		"bash"
-//     Blade o/Fallen God	"blade"
-//     Cinderwisp Devour	"cinderwisp"
-//     Cultist Mask			"mask"
-//     Dashing Shield		"dash"
-//     Fire Talisman		"fire_talisman"
-//     Hatchet				"hatchet"
-//     Heavy Hammer			"hammer"
-//     Mind Stone			"mind"
-//     Quarterstaff			"quarterstaff"
-//     Skeleton Arm			"skeleton_arm"
-//     Voidweaver Devour	"voidweaver"
+//     Æther Talisman        "aether_talisman"
+//     Bardiche              "bardiche"
+//     Bashing Shield        "bash"
+//     Blade o/Fallen God    "blade"
+//     Cinderwisp Devour     "cinderwisp"
+//     Cultist Mask          "mask"
+//     Dashing Shield        "dash"
+//     Fire Talisman         "fire_talisman"
+//     Hatchet               "hatchet"
+//     Heavy Hammer          "hammer"
+//     Mind Stone            "mind"
+//     Quarterstaff          "quarterstaff"
+//     Skeleton Arm          "skeleton_arm"
+//     Voidweaver Devour     "voidweaver"
 
 // === KEY REFERENCE ===
-// 		left		A or ←
-// 		right       D or →
-// 		up          W or ↑
-// 		down        S or ↓
-// 		primary     LMB or Return
-// 		bumpL       Z
-// 		bumpR       C
-// 		back        X
-// 		ability1    Shift
-// 		ability2    Control
+//     left        A or ←
+//     right       D or →
+//     up          W or ↑
+//     down        S or ↓
+//     primary     LMB or Return
+//     bumpL       Z
+//     bumpR       C
+//     back        X
+//     ability1    Shift
+//     ability2    Control
 
 func Set(key, val)
   storage.Set(key, val)
