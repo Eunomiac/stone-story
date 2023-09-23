@@ -12,14 +12,14 @@ In particular, the script assumes you have the following items in your inventory
 - Blade of the Fallen God
 - Cultist Mask
 - Bashing Shield
+- Fire Talisman
 - Dash Shield (no need to enchant or upgrade: just used for the dash)
 - Quarterstaff (enchant with cooldown reduction)
-- A Rune Hammer enchanted with extra health (required to take full advantage of defensive potions)
 
 ## Usage
 1. Download all three files (`Main.txt`, `Utilities.txt` and `HUD.txt`)
 2. Put all of them into the root of your Stone Story Scripts folder, right next to `Fishing.txt` (which is there by default)
-3. Go through the `==== CONFIG ====` section (near the top of `Main.txt`) and set the values to match your game
+3. Go through the `==== CONFIG ====` section (at the top of `Main.txt`) and set the values to match your game
 3. Save, then import 'Main.txt' via your Mind Stone, like so:
 ```
 import Main
@@ -30,9 +30,10 @@ The following keyboard controls can be used to change the behavior of the script
 - `[Z]` --- Enable/Disable the HUD
 - `[S]` --- Enable/Disable using the Quarterstaff to accelerate through the level
 - `[A]` --- Enable/Disable trying to pick off kills with the Skeleton Arm _(to satisfy the quest)_
-- `[SHIFT]` --- HOLD to force-equip a (configurable) melee weapon, defaults to "bardiche"
-- `[CTRL]` --- HOLD to force-equip a (configurable) ranged weapon, defaults to "repeating crossbow"
-- `[X]` --- HOLD to force-equip your main shield _(useful when you want to increase your armor for as long as possible)_
+- `[C]` --- Enable/Disable forced melee combat & dashing over ranged weapons _(for maximum speed)_
+- `[SHIFT]` --- HOLD to force-equip a (configurable) melee weapon
+- `[CTRL]` --- HOLD to force-equip a (configurable) ranged weapon
+- `[X]` --- HOLD to force-equip a (configurable) shield or offhand weapon
 
 ## The HUD
 The HUD has a lot of info, but you can toggle it off whenever you like with the `[Z]` key.  
@@ -56,6 +57,7 @@ The HUD has a lot of info, but you can toggle it off whenever you like with the 
 *(Controls)* **\[Z\]** Activate/Deactivate HUD  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**\[S\]** Activate/Deactivate Quarterstaff Jumping  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**\[A\]** Activate/Deactivate Skeleton Arm Kills (for artifact quest)  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**\[A\]** Activate/Deactivate Forced Melee Combat
 
 **\<**Current Main Weapon, as determined by script**\>**  
 **\[**Current Main Shield, as determined by script**\]**  
