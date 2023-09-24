@@ -10,46 +10,80 @@ func printRight(lNum, color, message, minSize)
   >`@xStart@,@lNum@,@color@,@message@
   
 func printCooldown(x, y, twoChar, key)
-  var displayString = "  "
   var color = "#FF00FF"
   ?item.GetCooldown(key) > 0
     color = "#FF00FF"
-    ?item.left = key | item.right = key
-      displayString = item.left.state + "-"
   :
     color = "#440044"
-  displayString = displayString + twoChar
   
-  >`@x@,@y@,@color@,@displayString@ @U.toSeconds(item.GetCooldown(key))@
+  >`@x@,@y@,@color@,@twoChar@ @U.toSeconds(item.GetCooldown(key))@
+  
+
+func shortenBuffString(buffStr)
+  var buffDisplayString = ""
+  var buffParts = string.Split(buffStr, ":")
+  ?Type(buffParts) = Type([]) & buffParts.Count() = 4
+    var buffName = buffParts[1]
+    var nameParts = string.split(buffName, "_")
+    var shortName = ""
+    for namePart : nameParts
+      ?string.Equals(namePart, "debuff")
+        shortName = shortName + "d."
+      :?string.Equals(namePart, "duration")
+        shortName = shortName + "dur."
+      :?string.Equals(namePart, "damage")
+        shortName = shortName + "dmg."
+      :
+        shortName = shortName + namePart + "."
+    buffDisplayString = string.Sub(shortName, 0, string.Size(shortName) - 1)
+  return buffDisplayString
   
 func parseBuffString(buffString)
   var fullDisplayString = false
   var buffStrings = string.split(buffString, ",")
+  var buffDisplayString = true
+  var buffParts = []
   for buffStr : buffStrings
-    var buffDisplayString = ""
-    var buffParts = string.Split(buffStr, ":")
+    buffDisplayString = true
+    buffParts = string.Split(buffStr, ":")
     ?Type(buffParts) = Type([]) & buffParts.Count() = 4
       var buffName = buffParts[1]
       var nameParts = string.split(buffName, "_")
-      var shortName = ""
       for namePart : nameParts
-        ?string.Equals(namePart, "debuff")
-          shortName = shortName + "d."
-        :?string.Equals(namePart, "duration")
-          shortName = shortName + "dur."
-        :?string.Equals(namePart, "damage")
-          shortName = shortName + "dmg."
+        ?buffDisplayString = true
+          ?string.Equals(namePart, "quarterstaff")
+            buffDisplayString = false
+          :?string.Equals(namePart, "bardiche")
+            buffDisplayString = false
+          :?string.Equals(namePart, "buff")
+            buffDisplayString = "DmgBuff"
+          :?string.Equals(namePart, "duration")
+            buffDisplayString = "DmgDown"
+          :?string.Equals(namePart, "dot")
+            buffDisplayString = "DoT"
+          :?string.Equals(namePart, "chill")
+            buffDisplayString = "Chill"
+          :?string.Equals(namePart, "fatigue")
+            buffDisplayString = "ArmDown"
+          :?string.Equals(namePart, "feeble")
+            buffDisplayString = "Feeble"
+          :?string.Equals(namePart, "smite")
+            buffDisplayString = "Smite"
+          :?string.Equals(namePart, "stun")
+            buffDisplayString = "Stun"
+          :?string.Equals(namePart, "ignition")
+            buffDisplayString = "Ignite"
+      ?buffDisplayString ! false
+        ?buffDisplayString = true
+          buffDisplayString = shortenBuffString(buffStr) + " (" + buffStr + ")"
+        ?buffParts[2]
+          buffDisplayString = buffDisplayString + " x" + buffParts[2]
+        ?buffParts[3]
+          buffDisplayString = buffDisplayString + ":" + U.toSeconds(int.Parse(buffParts[3]))
+        ?fullDisplayString
+          fullDisplayString = string.Join(",", [fullDisplayString, buffDisplayString])
         :
-          shortName = shortName + namePart + "."
-      buffDisplayString = string.Sub(shortName, 0, string.Size(shortName) - 1)
-      ?buffParts[2]
-        buffDisplayString = buffDisplayString + ": " + buffParts[2]
-      ?buffParts[3]
-        buffDisplayString = buffDisplayString + ":" + U.toSeconds(int.Parse(buffParts[3]))
-      ?fullDisplayString
-        fullDisplayString = string.Join(",", [fullDisplayString, buffDisplayString])
-      :
-        fullDisplayString = buffDisplayString
+          fullDisplayString = buffDisplayString
   ?fullDisplayString = false
     return ""
   return fullDisplayString
@@ -59,6 +93,9 @@ func Display()
   var xStart = 0
   var yStart = 6
   var lineNum = yStart
+  
+  ?U.Get("errorMessage")
+    >`25,0,#FF0000,@U.Get("errorMessage")@
 
   ?U.Get("hideHUD")
     printRight(0,"#FF0000","[Z] HUD", 0)
@@ -75,7 +112,7 @@ func Display()
   
   ?foe.damage > -1
     lineNum = U.displayFoe(lineNum, xStart)
-    >`@xStart@,@lineNum@,#DD0000,Lv@foe.level@ = @foe.distance@, Dmg: @foe.damage@, State: @foe.state@:@U.toSeconds(foe.time)@
+    >`@xStart@,@lineNum@,#DD0000,Lv@foe.level@ ..@foe.distance@, Dmg: @foe.damage@, State: @foe.state@:@U.toSeconds(foe.time)@
     lineNum++
     >`@xStart@,@lineNum@,#DD0000,+ @parseBuffString(foe.buffs.string)@
     lineNum++
@@ -88,20 +125,21 @@ func Display()
   >`@xStart@,@lineNum@,#FF0000,- @parseBuffString(debuffs.string)@
   
   lineNum = 23
+  xStart = 2
    
   printCooldown(xStart, lineNum, ">Q", "quarterstaff")
-  printCooldown(xStart + 8, lineNum, "<<", "mind")
-  printCooldown(xStart + 16, lineNum, ">>", "bash")
+  printCooldown(xStart + 6, lineNum, "<<", "mind")
+  printCooldown(xStart + 14, lineNum, ">>", "bash")
   lineNum++
   
   printCooldown(xStart, lineNum, "BG", "blade")
-  printCooldown(xStart + 8, lineNum, " M", "mask")
-  printCooldown(xStart + 16, lineNum, " H", "hammer")
+  printCooldown(xStart + 6, lineNum, " M", "mask")
+  printCooldown(xStart + 14, lineNum, " H", "hammer")
   lineNum++
   
   printCooldown(xStart, lineNum, "Sk", "skeleton_arm")
-  printCooldown(xStart + 8, lineNum, " B", "bardiche")
-  printCooldown(xStart + 16, lineNum, " T", "fire_talisman")
+  printCooldown(xStart + 6, lineNum, " B", "bardiche")
+  printCooldown(xStart + 14, lineNum, " T", "fire_talisman")
   lineNum++
   
   var rightYStart = 0
