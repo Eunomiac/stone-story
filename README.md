@@ -39,32 +39,3 @@ The following keyboard controls can be used to change the behavior of the script
 The HUD has a lot of info, but you can toggle it off whenever you like with the `[Z]` key.  
 
 ![HUD Image](https://i.imgur.com/xSaufOs.png)
-
-### HUD, Left Side
-**Location: Name & Star Level**  
-**Foe: Name (+total number of foes)**  
-&nbsp;&nbsp;&nbsp;&nbsp;**\[...keywords\]**  
-**Level = Distance, Damage, State:Time in State**  
-**+** ...Buffs on **Enemy**  
-**-** ...Debuffs on **Enemy**  
-  
-**+** ...Buffs on **Self**  
-**-** ...Debuffs on **Self**  
-*(Cooldowns)* **Sk = Skeleton Arm, BF = Blade of the Fallen God, Bh = Bashing Shield, M = Mindstone  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Q = Quarterstaff, Bd = Bardiche, H = Heavy Hammer**
-
-### HUD, Right Side
-*(Controls)* **\[Z\]** Activate/Deactivate HUD  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**\[S\]** Activate/Deactivate Quarterstaff Jumping  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**\[A\]** Activate/Deactivate Skeleton Arm Kills (for artifact quest)  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**\[A\]** Activate/Deactivate Forced Melee Combat
-
-**\<**Current Main Weapon, as determined by script**\>**  
-**\[**Current Main Shield, as determined by script**\]**  
-**\> **Current Main Ranged Weapon, as determined by script** \<**  
-
-*(only present if active)*  
-**Temporary Weapon/Shield Overrides** (will appear in pink)
-
-**I: Current screen index    X: Current world position**  
-*(AI States)* **\[AI\] \[Idle\] \[Paused\] \[Walk\]**
