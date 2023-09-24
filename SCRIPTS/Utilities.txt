@@ -73,8 +73,11 @@ func Init()
     Set("isActivating", false)
   ?!Has("mindFreeze")
     Set("mindFreeze", 0)
+  ?!Has("errorMessage")
+    Set("errorMessage", false)
 
 func Reset()
+  Set("errorMessage", false)
   InitLeft()
   InitRight()
   InitBoth()
@@ -179,6 +182,12 @@ func getBuffParts(buffName, buffString)
   return [0, 0]
 
 func xLookup(val, arr1, arr2)
+  ?Type(arr1) ! Type([])
+    Set("errorMessage", "'" + arr1 + "' is not an array")
+    return false
+  ?Type(arr2) ! Type([])
+    Set("errorMessage", "'" + arr2 + "' is not an array")
+    return false
   var index = arr1.IndexOf(val)
   ?index > -1
     return arr2[index]
