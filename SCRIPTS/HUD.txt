@@ -50,11 +50,13 @@ func parseBuffString(buffString)
       var buffName = buffParts[1]
       var nameParts = string.split(buffName, "_")
       for namePart : nameParts
-        ?buffDisplayString = true
+        ?buffDisplayString ! false
           ?string.Equals(namePart, "quarterstaff")
             buffDisplayString = false
           :?string.Equals(namePart, "bardiche")
             buffDisplayString = false
+          :?string.Equals(namePart, "debuff")
+            buffDisplayString = "DmgDown"
           :?string.Equals(namePart, "buff")
             buffDisplayString = "DmgBuff"
           :?string.Equals(namePart, "duration")
