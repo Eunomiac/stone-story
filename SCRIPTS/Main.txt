@@ -1,3 +1,8 @@
+// =============================================== IMPORTS =====================
+var HUD = import HUD
+var U = import Utilities
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
 // =============================================================================
 // ================================================ CONFIG =====================
 // =============================================================================
@@ -28,7 +33,7 @@ var strongArmorShield = "compound shield +11"   // Name of "high armor"-enchante
 var twoHandedOverride = "bardiche"              // Two-Handed Weapon to equip when [SHIFT] held down
 var oneHandedOverride = false                   // One-Handed Weapon to equip when [SHIFT] held down
     // ** One of the above two should be 'false' -- i.e. pick one or the other, not both **
-	
+    
 var offhandOverride = strongArmorShield         // Item to equip in right hand when [X] held down
 
 var rangedOverride = "repeating crossbow"       // Ranged Weapon to equip when [CTRL] held down
@@ -98,12 +103,6 @@ var forcedPotions = [ // If one of these potions is brewed at start of run, do n
 // _ _ _ _ _ _=== END CONFIG === _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
-
-
-// =============================================== IMPORTS =====================
-var HUD = import HUD
-var U = import Utilities
-// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // =============================================== WEAPON GETTERS ==============
 func getMainWeapon()
@@ -306,7 +305,7 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
   // --- [BOSS] Offensive Potion Check ---
   ?foe = bronze_guardian & U.isInState(32, 30) & (item.potion = strength | item.potion = berserk)
     activate potion
-  ?foe = nagaraja & U.isInState(101, 10) & item.potion = berserk
+  ?foe = nagaraja & U.isInState(101, 10) & item.potion = berserk & foe.distance <= 4
     activate potion
   ?foe = bolesh & U.isInState(999, 5) & item.potion = berserk
     activate potion
