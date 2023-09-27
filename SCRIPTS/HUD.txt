@@ -1,5 +1,7 @@
 var U = import Utilities
 
+var timeStringColors = ["#00FF00", "#FFFF00", "#FF0000"]
+
 func printRight(lNum, color, message, minSize)
   message = message + ""
   var xRight = 87
@@ -18,7 +20,6 @@ func printCooldown(x, y, twoChar, key)
   
   >`@x@,@y@,@color@,@twoChar@ @U.toSeconds(item.GetCooldown(key))@
   
-
 func shortenBuffString(buffStr)
   var buffDisplayString = ""
   var buffParts = string.Split(buffStr, ":")
@@ -57,6 +58,18 @@ func parseBuffString(buffString)
             buffDisplayString = false
           :?string.Equals(namePart, "debuff")
             buffDisplayString = "DmgDown"
+          :?string.Equals(namePart, "berserk")
+            buffDisplayString = "Berserk"
+          :?string.Equals(namePart, "vampiric")
+            buffDisplayString = "Vamp"
+          :?string.Equals(namePart, "lucky")
+            buffDisplayString = "Lucky"
+          :?string.Equals(namePart, "experience")
+            buffDisplayString = "+XP"
+          :?string.Equals(namePart, "strength")
+            buffDisplayString = "Strength"
+          :?string.Equals(namePart, "invisibility")
+            buffDisplayString = "Invis"
           :?string.Equals(namePart, "buff")
             buffDisplayString = "DmgBuff"
           :?string.Equals(namePart, "duration")
@@ -75,6 +88,8 @@ func parseBuffString(buffString)
             buffDisplayString = "Stun"
           :?string.Equals(namePart, "ignition")
             buffDisplayString = "Ignite"
+          :?string.Equals(namePart, "poena")
+            buffDisplayString = "REFLECT"
       ?buffDisplayString ! false
         ?buffDisplayString = true
           buffDisplayString = shortenBuffString(buffStr) + " (" + buffStr + ")"
@@ -89,6 +104,70 @@ func parseBuffString(buffString)
   ?fullDisplayString = false
     return ""
   return fullDisplayString
+
+func displayFoe(startLine, xStart)
+  var foeName = foe.name
+  var nameIndex = String.IndexOf(foe, foe.name)
+  var nameLength = String.Size(foe.name)
+  var foeSuffix = String.Sub(foe, nameIndex + nameLength)
+  var foeKeywords = String.Split(foeSuffix, true)
+  var numRows = Math.CeilToInt(foeKeywords.Count() / 2)
+  >`@xStart@,@startLine@,#FF0000,Foe: @foeName@ (+@foe.count@)
+  var xOffset = 10
+  for i = 0 .. foeKeywords.Count()-1
+    ?i % 4 = 0
+      startLine++
+      >`@xStart+2@,@startLine@,#CC0000,[@foeKeywords[i]@]
+      xOffset = String.Size(foeKeywords[i])+3
+    :
+      >`@xStart+xOffset+2@,@startLine@,#FF0000,[@foeKeywords[i]@]
+      xOffset = xOffset + String.Size(foeKeywords[i])+3
+  startLine++
+  return startLine
+  
+func getTimeColor(curTime, maxTime)
+  var lerpMidpoint = 0.75
+  var averageTimeFraction = 0.1
+  var startColor = "" 
+  var endColor = ""
+  var midColor = ""
+  averageTimeFraction = (1.0 * curTime) / maxTime
+  
+  ?averageTimeFraction < lerpMidpoint
+    startColor = timeStringColors[0]
+    endColor = timeStringColors[1]
+    averageTimeFraction = averageTimeFraction / lerpMidpoint
+    midColor = color.Lerp(startColor, endColor, averageTimeFraction)
+  :
+    startColor = timeStringColors[1]
+    endColor = timeStringColors[2]
+    averageTimeFraction = (averageTimeFraction - lerpMidpoint) / (1 - lerpMidpoint)
+    midColor = color.Lerp(startColor, endColor, averageTimeFraction)
+  return midColor
+  
+func displayTimeData(startLine)
+  // printRight(rightLineNum, "#FF00FF", "I: " + screen.i + ", X: " + screen.x, 0)
+
+  var mainStringColor = "#00FFFF"
+  
+  var averageTimeString = ""
+  var averageTimeStringSize = 0
+  var averageStringColor = timeStringColors[1]
+
+  var bestTimeString = ""
+  var bestStringColor = timeStringColors[1]
+  
+  ?loc.averageTime > 0
+    averageTimeString = "(" + U.toPercent(totalTime, loc.averageTime) + " of " + time.FormatDigital(loc.averageTime) + ")"
+    averageTimeStringSize = string.Size(averageTimeString)
+    averageStringColor = getTimeColor(totalTime, loc.averageTime)
+  ?loc.bestTime > 0
+    bestTimeString = "(" + U.toPercent(totalTime, loc.bestTime) + " of " + time.FormatDigital(loc.bestTime) + ")"
+    bestStringColor = getTimeColor(totalTime, loc.bestTime)
+        
+  printRight(startLine, mainStringColor, time.FormatDigital(totalTime), string.Size(time.FormatDigital(totalTime)) + averageTimeStringSize + 1)
+  printRight(startLine, averageStringColor, averageTimeString, 0)
+  printRight(startLine + 1, bestStringColor, bestTimeString, 0)
 
 func Display()
   // === HUD Info Display ===
@@ -113,7 +192,7 @@ func Display()
     lineNum++
   
   ?foe.damage > -1
-    lineNum = U.displayFoe(lineNum, xStart)
+    lineNum = displayFoe(lineNum, xStart)
     >`@xStart@,@lineNum@,#DD0000,Lv@foe.level@ ..@foe.distance@, Dmg: @foe.damage@, State: @foe.state@:@U.toSeconds(foe.time)@
     lineNum++
     >`@xStart@,@lineNum@,#DD0000,+ @parseBuffString(foe.buffs.string)@
@@ -148,6 +227,17 @@ func Display()
   var rightLineNum = rightYStart
  
   printRight(rightLineNum,"#00FF00","[Z] HUD", 16)
+  
+  ?U.Get("isForcingDash")
+    printRight(rightLineNum,"#00FF00","[D]", 7)
+  :
+    printRight(rightLineNum,"#FF0000","[D]", 7)
+
+  ?U.Get("isForcingBotFG")
+    printRight(rightLineNum,"#00FF00","[W]", 3)
+  :
+    printRight(rightLineNum,"#FF0000","[W]", 3)  
+  
   rightLineNum++
 
   ?U.Get("staffSpeed")
@@ -178,7 +268,7 @@ func Display()
   ?U.Get("assignedBoth") ! false
     oneHandedColor = #999999
     printRight(rightLineNum, "#00FFFF", "[<>] " + U.Get("assignedBoth"), 27)
-    printRight(rightLineNum + 1, "#00BBBB", U.Get("bothReason"), 25)
+    printRight(rightLineNum + 1, "#00BBBB", U.Get("bothReason"), 12)
   :
     oneHandedColor = #00FFFF
   rightLineNum++
@@ -190,52 +280,20 @@ func Display()
 
   ?U.Get("assignedLeft") ! false
     printRight(rightLineNum, oneHandedColor, "[ >] " + U.Get("assignedLeft"), 27)
-    printRight(rightLineNum + 1, oneHandedColor, U.Get("leftReason"), 25)
+    printRight(rightLineNum + 1, oneHandedColor, U.Get("leftReason"), 12)
   rightLineNum++
   rightLineNum++
 
   ?U.Get("assignedRight") ! false
     printRight(rightLineNum, oneHandedColor, "[< ] " + U.Get("assignedRight"), 27)
-    printRight(rightLineNum + 1, oneHandedColor, U.Get("rightReason"), 25)
+    printRight(rightLineNum + 1, oneHandedColor, U.Get("rightReason"), 12)
   rightLineNum++
   rightLineNum++
   
   ?U.Get("isActivating")
     printRight(rightLineNum, "#FF00FF", "ACTIVATING: [" + U.Get("isActivating") + "]", 15)
-  rightLineNum++      
-      
-  rightLineNum = 24
-  printRight(rightLineNum, "#FF00FF", "I: " + screen.i + ", X: " + screen.x, 0)
-  rightLineNum++
-  
-  var aiColor = #CC0000
-  var idleColor = #CC0000
-  var pausedColor = #CC0000
-  var walkColor = #CC0000
-  var faceColor = #FF00FF
-  
-  ?ai.enabled
-    aiColor = #00FF00
-  :
-    aiColor = #CC0000
-  ?ai.idle
-    idleColor = #00FF00
-  :
-    idleColor = #CC0000
-  ?ai.paused
-    pausedColor = #00FF00
-  :
-    pausedColor = #CC0000
-  ?ai.walking
-    walkColor = #00FF00
-  :
-    walkColor = #CC0000
-  
-  var xStartPushed = 59 // xStart + 10
-  >`@xStartPushed@,@rightLineNum@,@aiColor@,[AI]
-  >`@xStartPushed + 5@,@rightLineNum@,@idleColor@,[Idle]
-  >`@xStartPushed + 12@,@rightLineNum@,@pausedColor@,[Paused]
-  >`@xStartPushed + 21@,@rightLineNum@,@walkColor@,[Walk]
+    
+  displayTimeData(24)
   
   lineNum = yStart
   rightLineNum = rightYStart
