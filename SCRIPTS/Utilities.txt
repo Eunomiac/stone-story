@@ -73,8 +73,17 @@ func Init()
     Set("isActivating", false)
   ?!Has("mindFreeze")
     Set("mindFreeze", 0)
+  ?!Has("isDashBlocked")
+    Set("isDashBlocked", false)
   ?!Has("errorMessage")
     Set("errorMessage", false)
+  ?loc = hotspring | loc = gate
+    Set("hideHUD", true)
+    Set("staffSpeed", false)
+  ?!Has("isForcingBotFG")
+    Set("isForcingBotFG", false)
+  ?!Has("isForcingDash")
+    Set("isForcingDash", false)
 
 func Reset()
   Set("errorMessage", false)
@@ -82,9 +91,17 @@ func Reset()
   InitRight()
   InitBoth()
   Set("isActivating", false)
+  Set("isForcingDash", false)
+  ?Get("isForcingBotFG") & item.GetCooldown("blade") > 0
+    Set("isForcingBotFG", false)
+    ?Get("bothPriority") = 4
+      Set("bothPriority", 0)
+  ?loc = hotspring | loc = gate
+    Set("hideHUD", true)
+    Set("staffSpeed", false)
 
 func ActivateItem()
-  ?item.CanActivate()
+  ?item.CanActivate() & Get("isActivating") ! false
     activate R
   
 func InitLeft()
@@ -159,12 +176,18 @@ func AssignActivate(param)
   Set("isActivating", param)
   
 func EquipItems()
-  ?Get("assignedRight") ! false
-    equipR @Get("assignedRight")@
   ?Get("assignedLeft") ! false
     equipL @Get("assignedLeft")@
-  ?Get("assignedBoth") ! false
-    equip @Get("assignedBoth")@
+  ?Get("isForcingDash")
+    ?item.GetCooldown("bash") <= 0 & (foe.count > 5 | foe = boss)
+      equipR bash
+    :
+      equipR dash
+  :
+    ?Get("assignedRight") ! false
+      equipR @Get("assignedRight")@
+    ?Get("assignedBoth") ! false
+      equip @Get("assignedBoth")@
  
 func breakBuff(buff)
   var buffParts = string.Split(buff, ":")
@@ -230,19 +253,70 @@ func isInState(stateNum, stateTime)
   return foe.state = stateNum & foe.time >= stateTime
 
 func canDash()
+  ?Get("isDashBlocked")
+    return false
   ?Get("mindFreeze") = 0 | (time - Get("mindFreeze")) > 30
     Set("mindFreeze", 0)
   :
     return false
+  ?loc = icy & foe ! boss & (foe.count > 5 | foe ! spawner) & isFarAs("close")
+    return false
   ?isInRange(9, 14) & foe ! explode
-    ?item.GetCooldown("bash") <= 0
+    ?item.GetCooldown("bash") <= 0 & (foe.count > 5 | foe = boss)
       return "bash"
     :
       return "dash"
   return false
 
+func playerPosIsAtLeast(x)
+  var screenPos = screen.FromWorldX(pos.x)
+  return screenPos >= x
+
+func playerPosIsAtMost(x)
+  var screenPos = screen.FromWorldX(pos.x)
+  return screenPos <= x
+
 func toSeconds(frameCount)
   return math.Round(frameCount / 30)
+  
+func toTime(frameCount)
+  var numSeconds = toSeconds(frameCount)
+  var numMinutes = math.floor(numSeconds / 60)
+  numSeconds -= numMinutes * 60
+  var numHours = math.floor(numMinutes / 60)
+  numMinutes -= numHours * 60
+  ?numHours = 0
+    numHours = ""
+    ?numMinutes = 0
+      numMinutes = ""
+  numSeconds = numSeconds + ""
+  numMinutes = numMinutes + ""
+  numHours = numHours + ""
+  ?string.Size(numSeconds) = 1
+    numSeconds = "0" + numSeconds
+  ?(string.Size(numMinutes) + string.Size(numHours)) > 0
+    ?string.Size(numMinutes) = 0
+      numMinutes = "00:"
+    :?string.Size(numMinutes) = 1
+      numMinutes = numMinutes + ":"
+    ?string.Size(numHours) > 0
+      ?string.Size(numMinutes) = 2
+        numMinutes = "0" + numMinutes
+      numHours = numHours + ":"
+  return numHours + numMinutes + numSeconds
+  
+func toPercent(num, max)
+  var percent = (100 * num) / max
+  return percent + "%"
+
+func toSimpleFloat(num)
+  return math.Round(num * 100) * 0.01
+
+func getFraction(num, denom)
+  return (1.0 * num) / denom
+
+func isOverAvgTime()
+  return getFraction(totalTime, loc.averageTime) > 1
 
 var locations = ["Rocky Plateau", "Deadwood Canyon", "Caves of Fear", "Mushroom Forest", "Haunted Halls",  "Boiling Mine", "Icy Ridge", "Temple"]
 var locElems = ["none",  "none", "poison", "vigor", "aether", "fire", "ice", "poison"]
@@ -306,32 +380,19 @@ func brewPotion(potion)
   :?ingred = "tar + bronze"
     brew tar + bronze
 
-func displayFoe(startLine, xStart)
-  var foeName = foe.name
-  var nameIndex = String.IndexOf(foe, foe.name)
-  var nameLength = String.Size(foe.name)
-  var foeSuffix = String.Sub(foe, nameIndex + nameLength)
-  var foeKeywords = String.Split(foeSuffix, true)
-  var numRows = Math.CeilToInt(foeKeywords.Count() / 2)
-  >`@xStart@,@startLine@,#FF0000,Foe: @foeName@ (+@foe.count@)
-  var xOffset = 10
-  for i = 0 .. foeKeywords.Count()-1
-    ?i % 4 = 0
-      startLine++
-      >`@xStart+2@,@startLine@,#CC0000,[@foeKeywords[i]@]
-      xOffset = String.Size(foeKeywords[i])+3
-    :
-      >`@xStart+xOffset+2@,@startLine@,#FF0000,[@foeKeywords[i]@]
-      xOffset = xOffset + String.Size(foeKeywords[i])+3
-  startLine++
-  return startLine
-  
 func isFacingBoss()
   ?isInRange(0, 35)
     ?foe = dysangelos | (loc = deadwood & foe = boss) | foe = bolesh | (loc = mushroom & foe = boss) | foe = pallas | foe = bronze_guardian | foe = hrímnir | foe = nagaraja
       return true
   return false
  
+ 
+func checkForAAC()
+  ?item.left.state = 3
+    equipL wand *0
+  ?item.right.state = 3
+    equipR shield *0
+
 func isRangedWeapon(itemid)
   return itemid = crossbow | itemid = wand | itemid = talisman | itemid = staff | itemid = ouroboros
 func isTwoHanded(itemid)
