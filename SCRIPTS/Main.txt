@@ -13,6 +13,9 @@ var dmgDebuffThreshold = 7     // Total damage debuff on yourself before switchi
 var splashThreshold = 6        // Total number of foes needed to trigger use of splashing weapons
 var foeArmorThreshold = 50     // If foe's armor exceeds this, switch to armor-penetrating weapon
 var fastArmorShieldMax = 14    // Max armor of "fast armor"-enchanted shield, if you have one ('fastArmorShield', below)
+var minSmiteForSpeedRun = 5    // If you ever use BotFG during a speed run ('S' hotkey toggle), you'll exit
+                               //   the location if your smite buffs are lower than this number.
+                               // Can be disabled by setting to 0, OR by toggling off "Speed" (the 'S' hotkey toggle)
 
 // ---- ARSENAL ----
 // If you don't have a weapon for the indicated slot, set the value to 'false'.
@@ -28,6 +31,10 @@ var lifeStealMeleeWeapon = false                // Name of health-stealing melee
 var icePillarWeapon = "big aether sword U"      // Name of weapon to use when facing ice pillars/wall in Icy Ridge
 var fastArmorShield = "compound shield +14"     // Name of "fast armor"-enchanted shield
 var strongArmorShield = "compound shield +11"   // Name of "high armor"-enchanted shield
+var iceWandA = "ice wand +11"                   // Name of first speed-enchanted chill wand for smite combo
+var iceWandB = "ice wand +9"                    // Name of second speed-enchanted chill wand for smite combo
+var stoneHammerA = "stone hammer +10"           // Name of first stun-enchanted stone hammer for stun-locking
+var stoneHammerB = "stone hammer +6"            // Name of second stun-enchanted stone hammer for stun-locking
 
 // ---- HOTKEY OVERRIDES ----
 var twoHandedOverride = "bardiche"              // Two-Handed Weapon to equip when [SHIFT] held down
@@ -53,7 +60,7 @@ var elemWeapons = [  // Names of melee weapons used to take advantage of element
 ^mainWeapon,           // BASE
 ^"poison sword D",     // POISON (vs. Vigor)
 ^"vigor sword D",      // VIGOR (vs. Aether)
-^mainWeapon,           // AETHER (vs. Fire)
+^"aether sword D",     // AETHER (vs. Fire)
 ^"fire sword D",       // FIRE (vs. Ice)
 ^"ice sword +11 D"     // ICE (vs. Poison)
 ]
@@ -112,6 +119,8 @@ func getMainWeapon()
     return antiArmorMeleeWeapon
   ?U.getCounterElement()
     return elemWeapons[U.counterElements.IndexOf(U.getCounterElement())]
+  ?foe = boss
+    return debuffChillWeapon
   return mainWeapon
 
 func getMainOffhandWeapon()
@@ -149,6 +158,10 @@ var dmgDebuff = 0
   U.Toggle("skeletonArm")
 :?key = bumpRBegin
   U.Toggle("isRangedBlocked")
+:?key = upBegin & item.GetCooldown("blade") <= 0 & item.CanActivate()
+  U.Toggle("isForcingBotFG")
+:?key = rightBegin
+  U.Toggle("isForcingDash")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ LOCATION START =============
@@ -190,8 +203,13 @@ var dmgDebuff = 0
 
 // ================================================ FRAME INITIALIZATION =======
 dmgDebuff = U.getDebuffCount("debuff_duration_damage") + U.getDebuffCount("spider_debuff_damage")
+U.checkForAAC()
 U.AssignRight(getMainShield(), 1, "(initial)")
 U.AssignLeft(getMainWeapon(), 1, "(initial)")
+// ?U.Get("staffSpeed") & U.isOverAvgTime()
+//   loc.Leave()
+?item.GetCooldown("blade") > 2000 & U.getBuffCount("smite") < minSmiteForSpeedRun
+  loc.Leave()
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ HEAL CHECK: LIFESTEAL ======
@@ -208,18 +226,37 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ QUARTERSTAFF JUMP CHECK ====
-?U.Get("staffSpeed") & item.GetCooldown("quarterstaff") <= 0 & (foe.count = 0 | U.isFarAs("medium")) & item.CanActivate()
+?U.Get("staffSpeed") & !U.Get("isDashBlocked") & item.GetCooldown("quarterstaff") <= 0 & (foe.count = 0 | U.isFarAs("medium")) & item.CanActivate() & foe ! explode
   U.AssignBoth("quarterstaff", 20, "@@@ JUMP! @@@")
   U.AssignActivate("Staff")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ RANGED WEAPON CHECK ========
-?(item.GetCooldown("blade") > 0 | foe.count <= (smiteThreshold)) & (foe ! boss | (!U.isInState(1, 0) | !ai.idle))
-  ?foe ! immune_to_ranged & U.isWithin("close", "ranged") & dmgDebuff <= dmgDebuffThreshold & debuffs.string ! yeti_chill
-    U.AssignLeft(getMainRanged(), 2, "Ranged Check")
+U.Set("isDashBlocked", false)
+?U.isCloseAs("ranged")
+  ?foe = explode
+    ?iceWandA & iceWandB & buffs.string = smite & (foe.count > 5 | (foe ! spawner & U.getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill))
+      U.AssignLeft(iceWandA, 3.5, "Ranged Check (Explode!)")
+      U.AssignRight(iceWandB, 3.5, "Ranged Check (Explode!)")
+      U.Set("isDashBlocked", true)
+    :
+      U.AssignLeft(getMainRanged(), 3.5, "Ranged Check (Explode!)")
+  :?(item.GetCooldown("blade") > 0 | foe.count <= (smiteThreshold)) & (foe ! boss | (!U.isInState(1, 0) | !ai.idle))
+    ?foe ! immune_to_ranged & U.isWithin("close", "ranged") & dmgDebuff <= dmgDebuffThreshold & debuffs.string ! yeti_chill & foe ! poena
+      ?iceWandA & iceWandB & buffs.string = smite & (foe.count > 5 | (foe ! spawner & U.getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill))
+        U.AssignLeft(iceWandA, 2, "Ranged Check (Icy)")
+        U.AssignRight(iceWandB, 2, "Ranged Check (Icy)")
+        U.Set("isDashBlocked", true)
+      :
+        U.AssignLeft(getMainRanged(), 2, "Ranged Check")
 
 ?foe = magic_vulnerability & U.isCloseAs("ranged")
-  U.AssignLeft(magicRangedWeapon, 2, "Magic Weak")
+  U.Set("isDashBlocked", true)
+  ?iceWandA & iceWandB & buffs.string = smite & (foe.count > 5 | (foe ! spawner & U.getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill))
+    U.AssignLeft(iceWandA, 2, "Ranged Check (Explode!)")
+    U.AssignRight(iceWandB, 2, "Ranged Check (Explode!)")
+  :
+    U.AssignLeft(magicRangedWeapon, 2, "Magic Weak")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ HARVEST CHECK ==============
@@ -241,35 +278,38 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // =========================================== BLADE OF THE FALLEN GOD CHECK ===
-?item.GetCooldown("blade") <= 0 & foe.count > smiteThreshold & U.isCloseAs("screen") & item.CanActivate() & foe ! spawner
+?U.Get("isForcingBotFG") & item.GetCooldown("blade") <= 0 & item.CanActivate()
+  U.AssignBoth("blade of the fallen god", 4, "@X@ SMITE @X@")
+  U.AssignActivate("Blade")
+?item.GetCooldown("blade") <= 0 & (foe.count > smiteThreshold | (loc = icy & foe.count > (0.8 * smiteThreshold) & foe.maxhp < 50)) & U.isCloseAs("screen") & item.CanActivate() & foe ! spawner
   U.AssignBoth("blade of the fallen god", 3, "@@@ SMITE @@@")
   U.AssignActivate("Blade")
+  
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================= TALISMAN CHECK ============
-?summon.count = 0 & screen.i > 0 & item.GetCooldown("fire_talisman") <= 0 & item.CanActivate()
+?summon.count = 0 & (screen.i > 0 | U.playerPosIsAtLeast(20)) & item.GetCooldown("fire_talisman") <= 0 & item.CanActivate() & U.isFarAs("medium") & foe ! poena
   U.AssignRight("talis", 20, "@@@ SUMMON @@@")
   U.AssignActivate("Talisman")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-
-
 
 // =============================================================================
 // =============================================================================
 // ======================[[COMBAT LOGIC LOOP: BOSS FIGHT]]======================
 ?U.isFacingBoss()
 
-  // --- ［BOSS］ Potion Check, More-Aggressive Heal Check ---  
-  ?item.potion = cleansing & debuffs.count > 15
-    activate potion
-  ?hp < (0.66 * maxhp) & item.potion = defensive & healthHammer
-    ?item.left ! healthHammer
-      U.AssignLeft(healthHammer, 4, "Hammer Potion")
-    :?maxhp > 50
+  // --- ［BOSS］ Potion Check, More-Aggressive Heal Check ---
+  ?buffs.string ! berserk
+    ?item.potion = cleansing & debuffs.count > 15
       activate potion
-      U.AssignLeft("", -1, "")
-  :?hp < (0.5 * maxhp) & (item.potion = healing | item.potion = defensive | item.potion = cleansing | item.potion = vampiric)
-    activate potion
+    ?hp < (0.66 * maxhp) & item.potion = defensive & healthHammer
+      ?item.left ! healthHammer
+        U.AssignLeft(healthHammer, 4, "Hammer Potion")
+      :?maxhp > 50
+        activate potion
+        U.AssignLeft("", -1, "")
+    :?hp < (0.5 * maxhp) & (item.potion = healing | item.potion = defensive | item.potion = cleansing | item.potion = vampiric)
+      activate potion
     
   // --- [BOSS] Armor Check ---
   ?(foe.armor > 0 & U.isCloseAs("melee"))
@@ -284,7 +324,7 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
     U.AssignLeft(magicRangedWeapon, 3, "Phys-Immune")
 
   // --- ［BOSS］ Debuff Checks ---
-  ?(foe ! pallas | foe ! phase2) & foe.buffs.string ! protection & U.isCloseAs("close")
+  ?buffs.string ! berserk & (foe ! pallas | foe ! phase2) & foe.buffs.string ! protection & U.isCloseAs("close")
     ?debuffDamageWeapon & foe.debuffs.string ! damage & foe ! immune_to_debuff_damage
       U.AssignRight("cultist mask", 3, "@-Debuff-@")
       U.AssignLeft(debuffDamageWeapon, 3, "@-Damage-@")
@@ -292,8 +332,9 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
       U.AssignRight("cultist mask", 3, "@-Debuff-@")
       U.AssignLeft(debuffDoTWeapon, 3, "@-DoT-@")
     :?debuffChillWeapon & U.getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill
-      U.AssignRight("cultist mask", 3, "@-Debuff-@")
-      U.AssignLeft(debuffChillWeapon, 3, "@-Chill-" + U.getFoeDebuffCount("chill") + "-@")
+      ?foe ! nagaraja
+        U.AssignRight("cultist mask", 3, "@-Debuff-@")
+        U.AssignLeft(debuffChillWeapon, 3, "@-Chill-" + U.getFoeDebuffCount("chill") + "-@")
     :?foe.maxarmor > 50 & foe.debuffs.string ! fatigue & item.GetCooldown("hammer") <= 0 & item.CanActivate()
       U.AssignBoth("heavy hammer", 20, "@@@ ARMOR @@@")
       U.AssignActivate("Hammer")
@@ -303,9 +344,9 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
         U.AssignActivate("Mask")
 
   // --- [BOSS] Offensive Potion Check ---
-  ?foe = bronze_guardian & U.isInState(32, 30) & (item.potion = strength | item.potion = berserk)
+  ?foe = bronze_guardian & U.isInState(33, 30) & (item.potion = strength | item.potion = berserk)
     activate potion
-  ?foe = nagaraja & U.isInState(101, 10) & item.potion = berserk & foe.distance <= 4
+  ?foe = nagaraja & item.potion = berserk & foe.distance <= 6
     activate potion
   ?foe = bolesh & U.isInState(999, 5) & item.potion = berserk
     activate potion
@@ -313,29 +354,38 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
     activate potion
 
   // --- [BOSS] Special Weapon Check ---
-  ?foe = bronze_guardian & U.isInState(33, 0) & foe.armor > 0 & item.GetCooldown("hammer") <= 0 & U.isCloseAs("melee")
-    U.AssignLeft("heavy hammer", 20, "@@@ ARMOR @@@")
-    U.AssignActivate("Hammer")
   ?foe = nagaraja & foe.state > 1
     U.AssignLeft(getMainWeapon(), 2, "!! Naga Left !!")
     U.AssignRight(getMainOffhandWeapon(), 2, "!! Naga Right !!")
   ?foe = ice wall & icePillarWeapon
     U.AssignBoth(icePillarWeapon, 2, "!! Ice Wall !!")
+  ?foe = poena & stoneHammerA & stoneHammerB
+    U.AssignLeft(stoneHammerA, 3.4, "Stun Lock")
+    U.AssignRight(stoneHammerB, 3.4, "Stun Lock")
+  ?foe = bolesh
+    U.Set("isDashBlocked", true)
+    U.AssignBoth(getMainRanged(), 3.4, "!! Bolesh !!")
   
   // --- [BOSS] Dodge Check ---
   ?item.GetCooldown("mind") <= 0
-    ?foe = bronze_guardian & U.isInState(32, 20)
-      U.AssignLeft("mind", 3.5, "<< DODGE <<")
-    ?foe = nagaraja & U.isInState(112, 50)
-      U.AssignLeft("mind", 3.5, "<< DODGE <<")
+    ?foe = bronze_guardian & U.isInState(32, 10)
+      U.AssignBoth("mind", 3.5, "<< DODGE <<")
+      equip mind
+    ?foe = nagaraja & U.isInState(112, 53)
+      U.AssignBoth("mind", 3.5, "<< DODGE <<")
+      equip mind
     ?foe = dysangelos & foe = phase1 & U.isInState(33, 0)
-      U.AssignLeft("mind", 3.5, "<< DODGE <<")
+      U.AssignBoth("mind", 3.5, "<< DODGE <<")
+      equip mind
     ?foe = dysangelos & foe = phase3 & U.isInState(115, 60)
-      U.AssignLeft("mind", 3.5, "<< DODGE <<")
+      U.AssignBoth("mind", 3.5, "<< DODGE <<")
+      equip mind
     ?foe = pallas & foe = phase1 & U.isInState(32, 60)
-      U.AssignLeft("mind", 3.5, "<< DODGE <<")
+      U.AssignBoth("mind", 3.5, "<< DODGE <<")
+      equip mind
     ?foe = punishment & U.isInState(32, 0)
-      U.AssignLeft("mind", 3.5, "<< DODGE <<")
+      U.AssignBoth("mind", 3.5, "<< DODGE <<")
+      equip mind
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // =============================================================================
