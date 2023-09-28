@@ -8,12 +8,12 @@ var U = import Utilities
 // =============================================================================
 
 // ---- THRESHOLD VALUES ----
-var smiteThreshold = 11        // Min number of foes to activate Blade of the Fallen God
+var smiteThreshold = 8         // Min number of foes to activate Blade of the Fallen God
 var dmgDebuffThreshold = 7     // Total damage debuff on yourself before switching out of low-damage weapons
 var splashThreshold = 6        // Total number of foes needed to trigger use of splashing weapons
 var foeArmorThreshold = 50     // If foe's armor exceeds this, switch to armor-penetrating weapon
 var fastArmorShieldMax = 14    // Max armor of "fast armor"-enchanted shield, if you have one ('fastArmorShield', below)
-var minSmiteForSpeedRun = 5    // If you ever use BotFG during a speed run ('S' hotkey toggle), you'll exit
+var minSmiteForSpeedRun = 6    // If you ever use BotFG during a speed run ('S' hotkey toggle), you'll exit
                                //   the location if your smite buffs are lower than this number.
                                // Can be disabled by setting to 0, OR by toggling off "Speed" (the 'S' hotkey toggle)
 
@@ -27,12 +27,14 @@ var debuffDamageWeapon = "poison sword dP"      // Name of weapon to apply debuf
 var debuffDoTWeapon = "fire sword dF"           // Name of weapon to apply debuff_dot (fire)
 var debuffChillWeapon = "ice sword dI"          // Name of weapon to apply debuff_chill (ice)                                           
 var magicRangedWeapon = "vigor staff"           // Name of magical ranged weapon (able to hit physical-immune enemies)
-var lifeStealMeleeWeapon = false                // Name of health-stealing melee weapon if you want to use one
+var lifeStealMeleeWeapon = false                // Name of health-stealing melee weapon
+var lifeStealRangedWeapon = false               // Name of health-stealing ranged weapon
+var lifeStealShield = "vigor shield h"          // Name of heal-when-hit shield
 var icePillarWeapon = "big aether sword U"      // Name of weapon to use when facing ice pillars/wall in Icy Ridge
 var fastArmorShield = "compound shield +14"     // Name of "fast armor"-enchanted shield
 var strongArmorShield = "compound shield +11"   // Name of "high armor"-enchanted shield
 var iceWandA = "ice wand +11"                   // Name of first speed-enchanted chill wand for smite combo
-var iceWandB = "ice wand +9"                    // Name of second speed-enchanted chill wand for smite combo
+var iceWandB = "ice wand +10"                   // Name of second speed-enchanted chill wand for smite combo
 var stoneHammerA = "stone hammer +10"           // Name of first stun-enchanted stone hammer for stun-locking
 var stoneHammerB = "stone hammer +6"            // Name of second stun-enchanted stone hammer for stun-locking
 
@@ -56,6 +58,7 @@ var mainWeapon = "big aether sword U"           // Name of default main melee we
 var mainShield = strongArmorShield              // Name of default main shield
 var mainRanged = "repeating crossbow"           // Name of default main ranged weapon
 
+// ---- ELEMENTAL WEAPONS ----
 var elemWeapons = [  // Names of melee weapons used to take advantage of elemental weaknesses (set to 'mainWeapon' to default to that)
 ^mainWeapon,           // BASE
 ^"poison sword D",     // POISON (vs. Vigor)
@@ -88,10 +91,11 @@ var elemShields = [  // Names of shields used to take advantage of elemental wea
 ^mainShield,           // POISON (vs. Vigor)
 ^mainShield,           // VIGOR (vs. Aether)
 ^mainShield,           // AETHER (vs. Fire)
-^mainShield,           // FIRE (vs. Ice)
+^"talisman",           // FIRE (vs. Ice)
 ^mainShield            // ICE (vs. Poison)
 ]
 
+// ---- POTIONS ----
 var locPotions = [ // *U.getHealingPotion: Gets healing potion for which you have the most ingredients, favoring defensive->vampiric->cleansing->healing
 ^U.getHealingPotion(), // Rocky Plateau 
 ^U.getHealingPotion(), // Deadwood Canyon
@@ -106,6 +110,57 @@ var locPotions = [ // *U.getHealingPotion: Gets healing potion for which you hav
 var forcedPotions = [ // If one of these potions is brewed at start of run, do not override it
 ^"Invisibility Potion"
 ]
+
+// ---- BOSSES ----
+var poisonDebuffThreshold = // When boss' (hp + armor) is LOWER than this multiple, do NOT apply poison's damage debuff.
+^[                          //    (0 = always apply debuff; 1 = never apply debuff)
+^0,    // Dysangelos (Rocky Plateau)
+^1,    // Poena (Deadwood Canyon)
+^1,    // Bolesh (Caves of Fear)
+^0.25, //  (Mushroom Forest)
+^1,    // Pallas (Haunted Halls)
+^1,    // Bronze Guardian (Boiling Mine)
+^0.15, // Hrimnir (Icy Ridge)
+^0.15  // Nagaraja (Temple)
+]
+
+var iceDebuffThreshold =    // When boss' (hp + armor) is LOWER than this multiple, do NOT apply ice's chill debuff.
+^[                          //    (0 = always apply debuff; 1 = never apply debuff)
+^0.1,  // Dysangelos (Rocky Plateau)
+^1,    // Poena (Deadwood Canyon)
+^1,    // Bolesh (Caves of Fear)
+^0.1,  //  (Mushroom Forest)
+^0.1,  // Pallas (Haunted Halls)
+^1,    // Bronze Guardian (Boiling Mine)
+^1,    // Hrimnir (Icy Ridge)
+^1     // Nagaraja (Temple)
+]
+
+var fireDebuffThreshold =   // When boss' (hp + armor) is LOWER than this multiple, do NOT apply fire's DoT debuff.
+^[                          //    (0 = always apply debuff; 1 = never apply debuff)
+^0.05, // Dysangelos (Rocky Plateau)
+^1,    // Poena (Deadwood Canyon)
+^1,    // Bolesh (Caves of Fear)
+^0.1,  //  (Mushroom Forest)
+^0.05, // Pallas (Haunted Halls)
+^1,    // Bronze Guardian (Boiling Mine)
+^0.15, // Hrimnir (Icy Ridge)
+^0.05  // Nagaraja (Temple)
+]
+
+var maskDebuffThreshold =   // When boss' (hp + armor) is LOWER than this multiple, do NOT apply cultist mask's feeble debuff.
+^[                          //    (0 = always apply debuff; 1 = never apply debuff)
+^0.15, // Dysangelos (Rocky Plateau)
+^1,    // Poena (Deadwood Canyon)
+^0.15, // Bolesh (Caves of Fear)
+^0.15, //  (Mushroom Forest)
+^0.15, // Pallas (Haunted Halls)
+^1,    // Bronze Guardian (Boiling Mine)
+^0.15, // Hrimnir (Icy Ridge)
+^1     // Nagaraja (Temple)
+]
+
+
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 // _ _ _ _ _ _=== END CONFIG === _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -129,12 +184,14 @@ func getMainOffhandWeapon()
   return false
 
 func getMainShield()
-  ?armor >= fastArmorShieldMax | fastArmorShield = false
-    return strongArmorShield
-  return fastArmorShield
+  ?fastArmorShield & armor < fastArmorShieldMax
+    return fastArmorShield
+  ?U.getCounterElement()
+    return elemShields[U.counterElements.IndexOf(U.getCounterElement())]
+  return mainShield
   
 func getMainRanged()
-  ?U.Get("isRangedBlocked")
+  ?U.Get("isRangedBlocked") & foe ! explode
     return getMainWeapon()
   ?U.getCounterElement() & (foe.hp + foe.armor) > 200
     return elemRanged[U.counterElements.IndexOf(U.getCounterElement())]
@@ -143,9 +200,15 @@ func getMainRanged()
 
 // ================================================  INIT  =====================
 U.Init()
-U.Reset()
+U.Reset(false)
 
 var locPotion = U.xLookup(loc.name, U.locations, locPotions)
+
+var debuffDmgThreshold = U.xLookup(loc.name, U.locations, poisonDebuffThreshold)
+var debuffChillThreshold = U.xLookup(loc.name, U.locations, iceDebuffThreshold)
+var debuffDotThreshold = U.xLookup(loc.name, U.locations, fireDebuffThreshold)
+var debuffFeebleThreshold = U.xLookup(loc.name, U.locations, maskDebuffThreshold)
+
 var dmgDebuff = 0
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -166,7 +229,7 @@ var dmgDebuff = 0
 
 // ================================================ LOCATION START =============
 ?loc.begin
-  U.Reset()
+  U.Reset(true)
   ?!forcedPotions.Contains(item.potion) & item.potion ! locPotion
     U.brewPotion(locPotion)
 :?loc.loop & item.potion ! locPotion
@@ -206,8 +269,8 @@ dmgDebuff = U.getDebuffCount("debuff_duration_damage") + U.getDebuffCount("spide
 U.checkForAAC()
 U.AssignRight(getMainShield(), 1, "(initial)")
 U.AssignLeft(getMainWeapon(), 1, "(initial)")
-// ?U.Get("staffSpeed") & U.isOverAvgTime()
-//   loc.Leave()
+?U.Get("staffSpeed") & U.isOverAvgTime()
+  loc.Leave()
 ?item.GetCooldown("blade") > 2000 & U.getBuffCount("smite") < minSmiteForSpeedRun
   loc.Leave()
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -242,19 +305,19 @@ U.Set("isDashBlocked", false)
     :
       U.AssignLeft(getMainRanged(), 3.5, "Ranged Check (Explode!)")
   :?(item.GetCooldown("blade") > 0 | foe.count <= (smiteThreshold)) & (foe ! boss | (!U.isInState(1, 0) | !ai.idle))
-    ?foe ! immune_to_ranged & U.isWithin("close", "ranged") & dmgDebuff <= dmgDebuffThreshold & debuffs.string ! yeti_chill & foe ! poena
+    ?foe ! immune_to_ranged & U.isWithin("close", "ranged") & foe ! poena
       ?iceWandA & iceWandB & buffs.string = smite & (foe.count > 5 | (foe ! spawner & U.getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill))
         U.AssignLeft(iceWandA, 2, "Ranged Check (Icy)")
         U.AssignRight(iceWandB, 2, "Ranged Check (Icy)")
         U.Set("isDashBlocked", true)
-      :
+      :?dmgDebuff <= dmgDebuffThreshold & debuffs.string ! yeti_chill
         U.AssignLeft(getMainRanged(), 2, "Ranged Check")
 
 ?foe = magic_vulnerability & U.isCloseAs("ranged")
   U.Set("isDashBlocked", true)
   ?iceWandA & iceWandB & buffs.string = smite & (foe.count > 5 | (foe ! spawner & U.getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill))
-    U.AssignLeft(iceWandA, 2, "Ranged Check (Explode!)")
-    U.AssignRight(iceWandB, 2, "Ranged Check (Explode!)")
+    U.AssignLeft(iceWandA, 2, "Ranged Check (Magic Weak)")
+    U.AssignRight(iceWandB, 2, "Ranged Check (Magic Weak)")
   :
     U.AssignLeft(magicRangedWeapon, 2, "Magic Weak")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -281,7 +344,7 @@ U.Set("isDashBlocked", false)
 ?U.Get("isForcingBotFG") & item.GetCooldown("blade") <= 0 & item.CanActivate()
   U.AssignBoth("blade of the fallen god", 4, "@X@ SMITE @X@")
   U.AssignActivate("Blade")
-?item.GetCooldown("blade") <= 0 & (foe.count > smiteThreshold | (loc = icy & foe.count > (0.8 * smiteThreshold) & foe.maxhp < 50)) & U.isCloseAs("screen") & item.CanActivate() & foe ! spawner
+?item.GetCooldown("blade") <= 0 & (foe.count > smiteThreshold | (loc = icy & foe.count > (0.8 * smiteThreshold) & foe.maxhp < 50)) & U.isCloseAs("ranged") & item.CanActivate() & foe ! spawner
   U.AssignBoth("blade of the fallen god", 3, "@@@ SMITE @@@")
   U.AssignActivate("Blade")
   
@@ -321,27 +384,28 @@ U.Set("isDashBlocked", false)
 
   // --- [BOSS] Physical-Immune Check ---
   ?foe = immune_to_physical
-    U.AssignLeft(magicRangedWeapon, 3, "Phys-Immune")
+    ?iceWandA & iceWandB & U.getBuffCount("smite") > 0
+      U.AssignLeft(iceWandA, 3, "Phys-Immune")
+      U.AssignRight(iceWandB, 3, "Phys-Immune")
+    :
+      U.AssignLeft(magicRangedWeapon, 3, "Phys-Immune")
 
   // --- ［BOSS］ Debuff Checks ---
-  ?buffs.string ! berserk & (foe ! pallas | foe ! phase2) & foe.buffs.string ! protection & U.isCloseAs("close")
-    ?debuffDamageWeapon & foe.debuffs.string ! damage & foe ! immune_to_debuff_damage
-      U.AssignRight("cultist mask", 3, "@-Debuff-@")
-      U.AssignLeft(debuffDamageWeapon, 3, "@-Damage-@")
-    :?debuffDoTWeapon & foe.debuffs.string ! dot
-      U.AssignRight("cultist mask", 3, "@-Debuff-@")
-      U.AssignLeft(debuffDoTWeapon, 3, "@-DoT-@")
-    :?debuffChillWeapon & U.getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill
-      ?foe ! nagaraja
-        U.AssignRight("cultist mask", 3, "@-Debuff-@")
-        U.AssignLeft(debuffChillWeapon, 3, "@-Chill-" + U.getFoeDebuffCount("chill") + "-@")
-    :?foe.maxarmor > 50 & foe.debuffs.string ! fatigue & item.GetCooldown("hammer") <= 0 & item.CanActivate()
-      U.AssignBoth("heavy hammer", 20, "@@@ ARMOR @@@")
-      U.AssignActivate("Hammer")
-    :?foe.debuffs.string ! feeble & item.GetCooldown("mask") <= 0 & item.CanActivate()
-      ?foe ! nagaraja
-        U.AssignRight("cultist mask", 20, "@@@ ENFEEBLE @@@")
-        U.AssignActivate("Mask")
+  ?debuffDamageWeapon & U.isDebuffing(debuffDmgThreshold, "damage")
+    U.AssignRight("cultist mask", 3, "@-Debuff-@")
+    U.AssignLeft(debuffDamageWeapon, 3, "@-Damage-@")
+  :?debuffDoTWeapon & U.isDebuffing(debuffDotThreshold, "dot")
+    U.AssignRight("cultist mask", 3, "@-Debuff-@")
+    U.AssignLeft(debuffDoTWeapon, 3, "@-DoT-@")
+  :?debuffChillWeapon & U.isDebuffing(debuffChillThreshold, "chill")
+    U.AssignRight("cultist mask", 3, "@-Debuff-@")
+    U.AssignLeft(debuffChillWeapon, 3, "@-Chill-" + U.getFoeDebuffCount("chill") + "-@")
+  :?U.isDebuffing(1, "armor")
+    U.AssignBoth("heavy hammer", 20, "@@@ ARMOR @@@")
+    U.AssignActivate("Hammer")
+  :?U.isDebuffing(debuffFeebleThreshold, "feeble")
+    U.AssignRight("cultist mask", 20, "@@@ ENFEEBLE @@@")
+    U.AssignActivate("Mask")
 
   // --- [BOSS] Offensive Potion Check ---
   ?foe = bronze_guardian & U.isInState(33, 30) & (item.potion = strength | item.potion = berserk)
@@ -354,17 +418,22 @@ U.Set("isDashBlocked", false)
     activate potion
 
   // --- [BOSS] Special Weapon Check ---
+  ?foe = bronze_guardian
+    U.Set("isRangedBlocked", false)
   ?foe = nagaraja & foe.state > 1
     U.AssignLeft(getMainWeapon(), 2, "!! Naga Left !!")
     U.AssignRight(getMainOffhandWeapon(), 2, "!! Naga Right !!")
   ?foe = ice wall & icePillarWeapon
-    U.AssignBoth(icePillarWeapon, 2, "!! Ice Wall !!")
+    U.AssignLeft(icePillarWeapon, 2.1, "!! Ice Wall !!")
+    U.AssignRight("moondial", 2, "!! Ice Wall !!")
   ?foe = poena & stoneHammerA & stoneHammerB
     U.AssignLeft(stoneHammerA, 3.4, "Stun Lock")
     U.AssignRight(stoneHammerB, 3.4, "Stun Lock")
   ?foe = bolesh
     U.Set("isDashBlocked", true)
     U.AssignBoth(getMainRanged(), 3.4, "!! Bolesh !!")
+  ?foe = pallas & foe = phase2
+    U.AssignRight(lifeStealShield, 2, "!! Pallas Right !!")
   
   // --- [BOSS] Dodge Check ---
   ?item.GetCooldown("mind") <= 0
@@ -383,9 +452,6 @@ U.Set("isDashBlocked", false)
     ?foe = pallas & foe = phase1 & U.isInState(32, 60)
       U.AssignBoth("mind", 3.5, "<< DODGE <<")
       equip mind
-    ?foe = punishment & U.isInState(32, 0)
-      U.AssignBoth("mind", 3.5, "<< DODGE <<")
-      equip mind
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // =============================================================================
@@ -402,14 +468,15 @@ U.Set("isDashBlocked", false)
 
   // --- [NON-BOSS] Physical-Immune Check ---
   ?foe = immune_to_physical
-    U.AssignLeft(magicRangedWeapon, 3, "Phys-Immune")
+    ?iceWandA & iceWandB & U.getBuffCount("smite") > 0
+      U.AssignLeft(iceWandA, 3, "Phys-Immune")
+      U.AssignRight(iceWandB, 3, "Phys-Immune")
+    :
+      U.AssignLeft(magicRangedWeapon, 3, "Phys-Immune")
 
   // --- [NON-BOSS] Ice Pillar Check ---
-  ?(foe = ice pillar | foe = ice wall) & U.isCloseAs("ranged") & icePillarWeapon
-    ?U.canDash()
-      U.AssignRight(U.canDash(), 3.5, ">> DASH >>")
-    ?U.isCloseAs("close")
-      U.AssignLeft(icePillarWeapon, 3, "!! Ice Pillar !!")
+  ?(foe = ice pillar | foe = ice wall) & U.isCloseAs("close") & icePillarWeapon
+    U.AssignLeft(icePillarWeapon, 3, "!! Ice Pillar !!")
 
   // --- [NON-BOSS (sorta)] Acronian Miniboss Check ---
   ?foe = acronian
