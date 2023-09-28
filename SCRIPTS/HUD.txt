@@ -58,6 +58,8 @@ func parseBuffString(buffString)
             buffDisplayString = false
           :?string.Equals(namePart, "debuff")
             buffDisplayString = "DmgDown"
+          :?string.Equals(namePart, "pocket")
+            buffDisplayString = "P-Pocket"
           :?string.Equals(namePart, "berserk")
             buffDisplayString = "Berserk"
           :?string.Equals(namePart, "vampiric")
@@ -226,7 +228,7 @@ func Display()
   var rightYStart = 0
   var rightLineNum = rightYStart
  
-  printRight(rightLineNum,"#00FF00","[Z] HUD", 16)
+  printRight(rightLineNum,"#00FF00","[Z] HUD", 15)
   
   ?U.Get("isForcingDash")
     printRight(rightLineNum,"#00FF00","[D]", 7)
@@ -240,27 +242,21 @@ func Display()
   
   rightLineNum++
 
-  ?U.Get("staffSpeed")
-    printRight(rightLineNum,"#00FF00","[S] Speed", 16)
-    rightLineNum++
-  :
-    printRight(rightLineNum,"#FF0000","[S] Speed", 16)
-    rightLineNum++
-
   ?U.Get("skeletonArm")
-    printRight(rightLineNum,"#00FF00","[A] Skeleton Arm", 16)
-    rightLineNum++
+    printRight(rightLineNum,"#00FF00","[A] PP", 22)
   :
-    printRight(rightLineNum,"#FF0000","[A] Skeleton Arm", 16)
-    rightLineNum++
-
+    printRight(rightLineNum,"#FF0000","[A] PP", 22)
+  ?U.Get("staffSpeed")
+    printRight(rightLineNum,"#00FF00","[S] Spd", 15)
+  :
+    printRight(rightLineNum,"#FF0000","[S] Spd", 15)
   ?U.Get("isRangedBlocked")
-    printRight(rightLineNum,"#00FF00","[C] Melee Only", 16)
-    rightLineNum++
+    printRight(rightLineNum,"#00FF00","[C] Mel", 0)
   :
-    printRight(rightLineNum,"#FF0000","[C] Melee Only", 16)
-    rightLineNum++
-
+    printRight(rightLineNum,"#FF0000","[C] Mel", 0)
+    
+  rightLineNum++
+  rightLineNum++
   rightLineNum++
   
   var oneHandedColor = #00FFFF
