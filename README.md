@@ -43,8 +43,3 @@ The following keyboard controls can be used to change the behavior of the script
 - `[X]` --- HOLD to force-equip a (configurable) shield or offhand weapon
 - `[D]` --- Immediately trigger a dash by equipping Bash Shield or a Dash Shield
 - `[W]` --- Immediately equip & activate Blade of the Fallen God
-
-## The HUD
-The HUD has a lot of info, but you can toggle it off whenever you like with the `[Z]` key.  
-
-![HUD Image](https://i.imgur.com/xSaufOs.png)
