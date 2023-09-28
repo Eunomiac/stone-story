@@ -1,30 +1,13 @@
-// === Cooldown String Reference ===
-//     Æther Talisman        "aether_talisman"
-//     Bardiche              "bardiche"
-//     Bashing Shield        "bash"
-//     Blade o/Fallen God    "blade"
-//     Cinderwisp Devour     "cinderwisp"
-//     Cultist Mask          "mask"
-//     Dashing Shield        "dash"
-//     Fire Talisman         "fire_talisman"
-//     Hatchet               "hatchet"
-//     Heavy Hammer          "hammer"
-//     Mind Stone            "mind"
-//     Quarterstaff          "quarterstaff"
-//     Skeleton Arm          "skeleton_arm"
-//     Voidweaver Devour     "voidweaver"
+var bosses = ["dysangelos", "poena", "bolesh", "morel", "pallas", "bronze_guardian", "yeti", "nagaraja"]
+var bossNoDebuffCheck = [false, false, false, false, "phase2", false, false, false]
 
-// === KEY REFERENCE ===
-//     left        A or ←
-//     right       D or →
-//     up          W or ↑
-//     down        S or ↓
-//     primary     LMB or Return
-//     bumpL       Z
-//     bumpR       C
-//     back        X
-//     ability1    Shift
-//     ability2    Control
+var locations = ["Rocky Plateau", "Deadwood Canyon", "Caves of Fear", "Mushroom Forest", "Haunted Halls",  "Boiling Mine", "Icy Ridge", "Temple"]
+var locElems = ["none",  "none", "poison", "vigor", "aether", "fire", "ice", "poison"]
+var elements = ["none", "vigor", "aether", "fire", "ice", "poison"]
+var counterElements = ["none", "poison", "vigor",  "aether", "fire", "ice"]
+
+var ranges = ["melee", "close", "medium", "ranged", "screen"]
+var units = [5, 11, 16, 25, 35]
 
 func Set(key, val)
   storage.Set(key, val)
@@ -57,6 +40,7 @@ func Init()
     Set("skeletonArm", true)
   ?!Has("isRangeBlocked")
     Set("isRangeBlocked", false)
+
   ?!Has("assignedLeft")
     Set("assignedLeft", false)
     Set("leftReason", "")
@@ -85,7 +69,7 @@ func Init()
   ?!Has("isForcingDash")
     Set("isForcingDash", false)
 
-func Reset()
+func Reset(isLocStart)
   Set("errorMessage", false)
   InitLeft()
   InitRight()
@@ -99,6 +83,18 @@ func Reset()
   ?loc = hotspring | loc = gate
     Set("hideHUD", true)
     Set("staffSpeed", false)
+  ?isLocStart
+    Set("errorMessage", false)
+    Set("assignedLeft", false)
+    Set("leftReason", "")
+    Set("leftPriority", 0)
+    Set("assignedRight", false)
+    Set("rightReason", "")
+    Set("rightPriority", 0)
+    Set("assignedBoth", false)
+    Set("bothReason", "")
+    Set("bothPriority", 0)
+    Set("isForcingBotFG", false)
 
 func ActivateItem()
   ?item.CanActivate() & Get("isActivating") ! false
@@ -147,7 +143,11 @@ func InitBoth()
 func AssignBoth(item, priority, reason)
   ?priority < 0
     Set("bothPriority", 0)
-  :?Get("bothPriority") <= priority & Get("leftPriority") <= priority & Get("rightPriority") <= priority
+    return
+  ?Type(item) = "string" & string.Size(item) > 2
+    ?item.GetCount(item) = 0
+      return
+  ?Get("bothPriority") <= priority & Get("leftPriority") <= priority & Get("rightPriority") <= priority
     Set("assignedBoth", item)
     Set("bothReason", priority + ": " + reason)
     Set("bothPriority", priority)
@@ -155,7 +155,11 @@ func AssignBoth(item, priority, reason)
 func AssignLeft(item, priority, reason)
   ?priority < 0
     Set("leftPriority", 0)
-  :?isTwoHanded(item)
+    return
+  ?Type(item) = "string" & string.Size(item) > 2
+    ?item.GetCount(item) = 0
+      return
+  ?isTwoHanded(item)
     AssignBoth(item, priority, reason)
   :?Get("leftPriority") <= priority & Get("bothPriority") <= priority
     Set("assignedLeft", item)
@@ -167,7 +171,11 @@ func AssignLeft(item, priority, reason)
 func AssignRight(item, priority, reason)
   ?priority < 0
     Set("rightPriority", 0)
-  :?Get("rightPriority") <= priority & Get("bothPriority") <= priority
+    return
+  ?Type(item) = "string" & string.Size(item) > 2
+    ?item.GetCount(item) = 0
+      return
+  ?Get("rightPriority") <= priority & Get("bothPriority") <= priority
     Set("assignedRight", item)
     Set("rightReason", priority + ": " + reason)
     Set("rightPriority", priority)
@@ -178,11 +186,9 @@ func AssignActivate(param)
 func EquipItems()
   ?Get("assignedLeft") ! false
     equipL @Get("assignedLeft")@
-  ?Get("isForcingDash")
-    ?item.GetCooldown("bash") <= 0 & (foe.count > 5 | foe = boss)
-      equipR bash
-    :
-      equipR dash
+  ?Get("isForcingDash") & canDash()
+    equipR @canDash()@
+    Set("isForcingDash", false)
   :
     ?Get("assignedRight") ! false
       equipR @Get("assignedRight")@
@@ -229,14 +235,11 @@ func getFoeDebuffCount(buffName)
 func getArmor()
   return math.Round((armor * 10) + armor.f) / 10
 
-var ranges = ["melee", "close", "medium", "ranged", "screen"]
-var units = [5, 11, 16, 25, 35]
-
 func isCloseAs(range)
-  return foe.distance <= (xLookup(range, ranges, units) + 1)
+  return foe.distance <= xLookup(range, ranges, units)
 
 func isFarAs(range)
-  return foe.distance >= (xLookup(range, ranges, units) - 1)
+  return foe.distance >= xLookup(range, ranges, units)
 
 func isWithin(rangeA, rangeB)
   var unitA = xLookup(rangeA, ranges, units)
@@ -244,29 +247,72 @@ func isWithin(rangeA, rangeB)
   return isInRange(unitA, unitB)
 
 func isInRange(min, max)
-  ?max > min
-    return foe.distance >= (min - 1) & foe.distance <= (max + 1)
-  :
-    return foe.distance >= (min - 1)
+  ?foe.count > 0
+    ?max > min
+      return foe.distance >= min & foe.distance <= max
+    :
+      return foe.distance >= min
 
 func isInState(stateNum, stateTime)
   return foe.state = stateNum & foe.time >= stateTime
 
+func getDashShield()
+  ?item.GetCount("bash") > 0 & item.GetCooldown("bash") <= 0 & (foe.count > 5 | (foe ! immune_to_stun & (foe = boss | foe.damage > 4)))
+    return "bash"
+  :?item.GetCount("dash") > 0
+    return "dash"
+  :
+    return false
+
 func canDash()
+  ?!getDashShield()
+    return false
+  ?Get("isForcingDash")
+    return getDashShield()
   ?Get("isDashBlocked")
     return false
+
   ?Get("mindFreeze") = 0 | (time - Get("mindFreeze")) > 30
     Set("mindFreeze", 0)
   :
     return false
-  ?loc = icy & foe ! boss & (foe.count > 5 | foe ! spawner) & isFarAs("close")
-    return false
+
+  //  ?loc = icy & foe ! boss & (foe.count > 5 | foe ! spawner) & isFarAs("close")
+  //    return false
   ?isInRange(9, 14) & foe ! explode
-    ?item.GetCooldown("bash") <= 0 & (foe.count > 5 | foe = boss)
-      return "bash"
-    :
-      return "dash"
+    return getDashShield()
   return false
+  
+func isDebuffing(threshold, debuff)
+  ?buffs.string = berserk
+    return false
+  ?foe.buffs.string = protection
+    return false
+  ?!isCloseAs("close")
+    return false
+
+  for i = 0..(bossNoDebuffCheck.Count() - 1)
+    ?foe = bosses[i] & foe = bossNoDebuffCheck[i]
+      return false
+
+  var isBelowThreshold = (foe.hp + foe.armor) <= threshold * (foe.maxhp + foe.maxarmor)
+
+  ?debuff = "damage" & threshold ! 1 & hp < (0.25 * maxhp)
+    isBelowThreshold = false
+
+  ?isBelowThreshold
+    return false
+
+  ?debuff = "damage"
+    return foe.debuffs.string ! damage & foe ! immune_to_debuff_damage
+  :?debuff = "dot"
+    return foe.debuffs.string ! dot
+  :?debuff = "chill"
+    return getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill
+  :?debuff = "armor"
+    return foe.maxarmor > 50 & foe.debuffs.string ! fatigue & item.GetCooldown("hammer") <= 0 & item.CanActivate()
+  :?debuff = "feeble"
+    return foe.debuffs.string ! feeble & item.GetCooldown("mask") <= 0 & item.CanActivate()
 
 func playerPosIsAtLeast(x)
   var screenPos = screen.FromWorldX(pos.x)
@@ -316,12 +362,9 @@ func getFraction(num, denom)
   return (1.0 * num) / denom
 
 func isOverAvgTime()
-  return getFraction(totalTime, loc.averageTime) > 1
-
-var locations = ["Rocky Plateau", "Deadwood Canyon", "Caves of Fear", "Mushroom Forest", "Haunted Halls",  "Boiling Mine", "Icy Ridge", "Temple"]
-var locElems = ["none",  "none", "poison", "vigor", "aether", "fire", "ice", "poison"]
-var elements = ["none", "vigor", "aether", "fire", "ice", "poison"]
-var counterElements = ["none", "poison", "vigor",  "aether", "fire", "ice"]
+  ?loc.averageTime
+    return getFraction(totalTime, loc.averageTime) > 1
+  return false
 
 func getCounterElement()
   var element = ""
