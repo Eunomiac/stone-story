@@ -5,6 +5,13 @@ var locations = ["Rocky Plateau", "Deadwood Canyon", "Caves of Fear", "Mushroom 
 var locElems = ["none",  "none", "poison", "vigor", "aether", "fire", "ice", "poison"]
 var elements = ["none", "vigor", "aether", "fire", "ice", "poison"]
 var counterElements = ["none", "poison", "vigor",  "aether", "fire", "ice"]
+var healingPotions = ["defensive", "vampiric", "cleansing", "healing"]
+
+func isHealingPotion(item)
+  for i = 0..(healingPotions.Count() - 1)
+    ?item = healingPotions[i]
+      return true
+  return false
 
 var ranges = ["melee", "close", "medium", "ranged", "screen"]
 var units = [5, 11, 16, 25, 35]
@@ -68,14 +75,45 @@ func Init()
     Set("isForcingBotFG", false)
   ?!Has("isForcingDash")
     Set("isForcingDash", false)
+  ?!Has("lastFrameHP")
+    Set("lastFrameHP", hp)
+  ?!Has("lastFrameState")
+    Set("lastFrameState", false)
+  ?!Has("lastFrameStateTime")
+    Set("lastFrameState", false)
+  ?!Has("secondLastFrameState")
+    Set("secondLastFrameState", false)
+  ?!Has("secondLastFrameStateTime")
+    Set("secondLastFrameStateTime", false)
+  ?!Has("majorDamageAlert")
+    Set("majorDamageAlert", false)
+  ?!Has("maxOverAvgToExitMult")
+    Set("maxOverAvgToExitMult", 0)
 
 func Reset(isLocStart)
+  var alertMessage = ""
   Set("errorMessage", false)
   InitLeft()
   InitRight()
   InitBoth()
   Set("isActivating", false)
   Set("isForcingDash", false)
+  ?(Get("lastFrameHP") - hp) > 1
+     alertMessage = (Get("lastFrameHP") - hp) + " Damage Taken at State "
+    ?Get("secondLastFrameState")
+      alertMessage += Get("secondLastFrameState") + ":" + Get("secondLastFrameStateTime") + " > "
+    ?Get("lastFrameState")
+      alertMessage += Get("lastFrameState") + ":" + Get("lastFrameStateTime") + " > "
+    alertMessage += foe.state + ":" + foe.time
+    Set("majorDamageAlert", alertMessage)
+  Set("lastFrameHP", hp)
+  ?Get("lastFrameState")
+    Set("secondLastFrameState", Get("lastFrameState"))
+  ?Get("lastFrameStateTime")
+    Set("secondLastFrameStateTime", Get("lastFrameStateTime"))
+  ?foe.count > 0
+    Set("lastFrameState", foe.state)
+    Set("lastFrameStateTime", foe.time)
   ?Get("isForcingBotFG") & item.GetCooldown("blade") > 0
     Set("isForcingBotFG", false)
     ?Get("bothPriority") = 4
@@ -95,6 +133,7 @@ func Reset(isLocStart)
     Set("bothReason", "")
     Set("bothPriority", 0)
     Set("isForcingBotFG", false)
+    Set("majorDamageAlert", false)
 
 func ActivateItem()
   ?item.CanActivate() & Get("isActivating") ! false
@@ -256,6 +295,10 @@ func isInRange(min, max)
 func isInState(stateNum, stateTime)
   return foe.state = stateNum & foe.time >= stateTime
 
+func Dodge()
+  AssignBoth("mind", 3.5, "<< DODGE <<")
+  equip mind
+
 func getDashShield()
   ?item.GetCount("bash") > 0 & item.GetCooldown("bash") <= 0 & (foe.count > 5 | (foe ! immune_to_stun & (foe = boss | foe.damage > 4)))
     return "bash"
@@ -362,8 +405,10 @@ func getFraction(num, denom)
   return (1.0 * num) / denom
 
 func isOverAvgTime()
+  ?Get("maxOverAvgToExitMult") = 0
+    return false
   ?loc.averageTime
-    return getFraction(totalTime, loc.averageTime) > 1
+    return getFraction(totalTime, loc.averageTime) > (totalTime * Get("maxOverAvgToExitMult"))
   return false
 
 func getCounterElement()
@@ -401,6 +446,8 @@ func getHealingPotion()
     return "vampiric"
     
 func brewPotion(potion)
+  ?item.potion = potion
+    return
   var ingred = xLookup(potion, potions, ingredients)
   ?ingred = "wood + wood"
     brew wood + wood
