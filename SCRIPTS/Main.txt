@@ -8,14 +8,16 @@ var U = import Utilities
 // =============================================================================
 
 // ---- THRESHOLD VALUES ----
-var smiteThreshold = 8         // Min number of foes to activate Blade of the Fallen God
-var dmgDebuffThreshold = 7     // Total damage debuff on yourself before switching out of low-damage weapons
-var splashThreshold = 6        // Total number of foes needed to trigger use of splashing weapons
-var foeArmorThreshold = 50     // If foe's armor exceeds this, switch to armor-penetrating weapon
-var fastArmorShieldMax = 14    // Max armor of "fast armor"-enchanted shield, if you have one ('fastArmorShield', below)
-var minSmiteForSpeedRun = 6    // If you ever use BotFG during a speed run ('S' hotkey toggle), you'll exit
-                               //   the location if your smite buffs are lower than this number.
-                               // Can be disabled by setting to 0, OR by toggling off "Speed" (the 'S' hotkey toggle)
+var smiteThreshold = 8          // Min number of foes to activate Blade of the Fallen God
+var dmgDebuffThreshold = 7      // Total damage debuff on yourself before switching out of low-damage weapons
+var splashThreshold = 3         // Total number of foes needed to trigger use of splashing weapons
+var foeArmorThreshold = 50      // If foe's armor exceeds this, switch to armor-penetrating weapon
+var fastArmorShieldMax = 14     // Max armor of "fast armor"-enchanted shield, if you have one ('fastArmorShield', below)
+var maxOverAvgToExitMult = 1.15 // If, during a speed run ('S' hotkey toggle), your current time exceeds your average time
+                                //   by more than this multiplier, you'll auto-exit the stage (to prevent your average
+                                //   taking a hit).  Set to 0 to disable.
+var devourFireRuneThreshold = 3 // The number of ignition stacks on an enemy required to trigger Cinderwisp's devour.
+                                //   Set to 0 to never trigger devour.
 
 // ---- ARSENAL ----
 // If you don't have a weapon for the indicated slot, set the value to 'false'.
@@ -31,10 +33,10 @@ var lifeStealMeleeWeapon = false                // Name of health-stealing melee
 var lifeStealRangedWeapon = false               // Name of health-stealing ranged weapon
 var lifeStealShield = "vigor shield h"          // Name of heal-when-hit shield
 var icePillarWeapon = "big aether sword U"      // Name of weapon to use when facing ice pillars/wall in Icy Ridge
-var fastArmorShield = "compound shield +14"     // Name of "fast armor"-enchanted shield
+var fastArmorShield = "compound shield +10"     // Name of "fast armor"-enchanted shield
 var strongArmorShield = "compound shield +11"   // Name of "high armor"-enchanted shield
-var iceWandA = "ice wand +11"                   // Name of first speed-enchanted chill wand for smite combo
-var iceWandB = "ice wand +10"                   // Name of second speed-enchanted chill wand for smite combo
+var iceWandA = "ice wand +13"                   // Name of first speed-enchanted chill wand for smite combo
+var iceWandB = "ice wand +12"                   // Name of second speed-enchanted chill wand for smite combo
 var stoneHammerA = "stone hammer +10"           // Name of first stun-enchanted stone hammer for stun-locking
 var stoneHammerB = "stone hammer +6"            // Name of second stun-enchanted stone hammer for stun-locking
 
@@ -117,7 +119,7 @@ var poisonDebuffThreshold = // When boss' (hp + armor) is LOWER than this multip
 ^0,    // Dysangelos (Rocky Plateau)
 ^1,    // Poena (Deadwood Canyon)
 ^1,    // Bolesh (Caves of Fear)
-^0.25, //  (Mushroom Forest)
+^0.25, // Morel (Mushroom Forest)
 ^1,    // Pallas (Haunted Halls)
 ^1,    // Bronze Guardian (Boiling Mine)
 ^0.15, // Hrimnir (Icy Ridge)
@@ -129,7 +131,7 @@ var iceDebuffThreshold =    // When boss' (hp + armor) is LOWER than this multip
 ^0.1,  // Dysangelos (Rocky Plateau)
 ^1,    // Poena (Deadwood Canyon)
 ^1,    // Bolesh (Caves of Fear)
-^0.1,  //  (Mushroom Forest)
+^0.1,  // Morel (Mushroom Forest)
 ^0.1,  // Pallas (Haunted Halls)
 ^1,    // Bronze Guardian (Boiling Mine)
 ^1,    // Hrimnir (Icy Ridge)
@@ -141,7 +143,7 @@ var fireDebuffThreshold =   // When boss' (hp + armor) is LOWER than this multip
 ^0.05, // Dysangelos (Rocky Plateau)
 ^1,    // Poena (Deadwood Canyon)
 ^1,    // Bolesh (Caves of Fear)
-^0.1,  //  (Mushroom Forest)
+^0.1,  // Morel (Mushroom Forest)
 ^0.05, // Pallas (Haunted Halls)
 ^1,    // Bronze Guardian (Boiling Mine)
 ^0.15, // Hrimnir (Icy Ridge)
@@ -153,7 +155,7 @@ var maskDebuffThreshold =   // When boss' (hp + armor) is LOWER than this multip
 ^0.15, // Dysangelos (Rocky Plateau)
 ^1,    // Poena (Deadwood Canyon)
 ^0.15, // Bolesh (Caves of Fear)
-^0.15, //  (Mushroom Forest)
+^0.15, // Morel (Mushroom Forest)
 ^0.15, // Pallas (Haunted Halls)
 ^1,    // Bronze Guardian (Boiling Mine)
 ^0.15, // Hrimnir (Icy Ridge)
@@ -191,7 +193,7 @@ func getMainShield()
   return mainShield
   
 func getMainRanged()
-  ?U.Get("isRangedBlocked") & foe ! explode
+  ?U.Get("isRangedBlocked") & foe ! explode & foe ! bolesh & foe ! bronze_guardian
     return getMainWeapon()
   ?U.getCounterElement() & (foe.hp + foe.armor) > 200
     return elemRanged[U.counterElements.IndexOf(U.getCounterElement())]
@@ -227,13 +229,14 @@ var dmgDebuff = 0
   U.Toggle("isForcingDash")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
+
+
 // ================================================ LOCATION START =============
-?loc.begin
+?loc.begin | loc.loop
+  U.Set("maxOverAvgToExitMult", maxOverAvgToExitMult)
   U.Reset(true)
-  ?!forcedPotions.Contains(item.potion) & item.potion ! locPotion
+  ?loc.begin & !forcedPotions.Contains(item.potion) & item.potion ! locPotion
     U.brewPotion(locPotion)
-:?loc.loop & item.potion ! locPotion
-  U.brewPotion(locPotion)
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ TEMPORARY OVERRIDES ========
@@ -269,10 +272,9 @@ dmgDebuff = U.getDebuffCount("debuff_duration_damage") + U.getDebuffCount("spide
 U.checkForAAC()
 U.AssignRight(getMainShield(), 1, "(initial)")
 U.AssignLeft(getMainWeapon(), 1, "(initial)")
-?U.Get("staffSpeed") & U.isOverAvgTime()
+?U.Get("staffSpeed") & maxOverAvgToExitMult > 0 & U.isOverAvgTime()
   loc.Leave()
-?item.GetCooldown("blade") > 2000 & U.getBuffCount("smite") < minSmiteForSpeedRun
-  loc.Leave()
+
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ HEAL CHECK: LIFESTEAL ======
@@ -289,7 +291,7 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ QUARTERSTAFF JUMP CHECK ====
-?U.Get("staffSpeed") & !U.Get("isDashBlocked") & item.GetCooldown("quarterstaff") <= 0 & (foe.count = 0 | U.isFarAs("medium")) & item.CanActivate() & foe ! explode
+?U.Get("staffSpeed") & !U.Get("isDashBlocked") & item.GetCooldown("quarterstaff") <= 0 & (foe ! bronze_guardian | (foe = bronze_guardian & U.isInState(33, 10))) & item.CanActivate() & foe ! explode
   U.AssignBoth("quarterstaff", 20, "@@@ JUMP! @@@")
   U.AssignActivate("Staff")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -354,6 +356,8 @@ U.Set("isDashBlocked", false)
 ?summon.count = 0 & (screen.i > 0 | U.playerPosIsAtLeast(20)) & item.GetCooldown("fire_talisman") <= 0 & item.CanActivate() & U.isFarAs("medium") & foe ! poena
   U.AssignRight("talis", 20, "@@@ SUMMON @@@")
   U.AssignActivate("Talisman")
+:?devourFireRuneThreshold > 0 & summon.GetId() = cinderwisp & summon.GetVar("ignition") >= devourFireRuneThreshold  
+  activate cinderwisp  
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // =============================================================================
@@ -418,8 +422,6 @@ U.Set("isDashBlocked", false)
     activate potion
 
   // --- [BOSS] Special Weapon Check ---
-  ?foe = bronze_guardian
-    U.Set("isRangedBlocked", false)
   ?foe = nagaraja & foe.state > 1
     U.AssignLeft(getMainWeapon(), 2, "!! Naga Left !!")
     U.AssignRight(getMainOffhandWeapon(), 2, "!! Naga Right !!")
@@ -431,27 +433,22 @@ U.Set("isDashBlocked", false)
     U.AssignRight(stoneHammerB, 3.4, "Stun Lock")
   ?foe = bolesh
     U.Set("isDashBlocked", true)
-    U.AssignBoth(getMainRanged(), 3.4, "!! Bolesh !!")
+    U.AssignBoth(getMainRanged(), 3.5, "!! Bolesh !!")
   ?foe = pallas & foe = phase2
     U.AssignRight(lifeStealShield, 2, "!! Pallas Right !!")
   
   // --- [BOSS] Dodge Check ---
   ?item.GetCooldown("mind") <= 0
     ?foe = bronze_guardian & U.isInState(32, 10)
-      U.AssignBoth("mind", 3.5, "<< DODGE <<")
-      equip mind
+      U.Dodge()
     ?foe = nagaraja & U.isInState(112, 53)
-      U.AssignBoth("mind", 3.5, "<< DODGE <<")
-      equip mind
+      U.Dodge()
     ?foe = dysangelos & foe = phase1 & U.isInState(33, 0)
-      U.AssignBoth("mind", 3.5, "<< DODGE <<")
-      equip mind
+      U.Dodge()
     ?foe = dysangelos & foe = phase3 & U.isInState(115, 60)
-      U.AssignBoth("mind", 3.5, "<< DODGE <<")
-      equip mind
+      U.Dodge()
     ?foe = pallas & foe = phase1 & U.isInState(32, 60)
-      U.AssignBoth("mind", 3.5, "<< DODGE <<")
-      equip mind
+      U.Dodge()
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // =============================================================================
@@ -482,7 +479,8 @@ U.Set("isDashBlocked", false)
   ?foe = acronian
     U.AssignLeft(getMainWeapon(), 2, "!! Acro Left !!")
     U.AssignRight(getMainOffhandWeapon(), 2, "!! Acro Right !!")
-
+    ?item.GetCooldown("mind") <= 0 & armor < foe.damage & U.isInState(32, 6)
+      U.Dodge()
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ============================== FINAL OVERRIDING CHECKS ======================
