@@ -127,13 +127,15 @@ func displayFoe(startLine, xStart)
   startLine++
   return startLine
   
-func getTimeColor(curTime, maxTime)
+func getTimeColor(curTime, maxTime, isReversing)
   var lerpMidpoint = 0.75
   var averageTimeFraction = 0.1
   var startColor = "" 
   var endColor = ""
   var midColor = ""
   averageTimeFraction = (1.0 * curTime) / maxTime
+  ?isReversing
+    averageTimeFraction = 1 - averageTimeFraction
   
   ?averageTimeFraction < lerpMidpoint
     startColor = timeStringColors[0]
@@ -150,26 +152,50 @@ func getTimeColor(curTime, maxTime)
 func displayTimeData(startLine)
   // printRight(rightLineNum, "#FF00FF", "I: " + screen.i + ", X: " + screen.x, 0)
 
-  var mainStringColor = "#00FFFF"
+  var curTimeString = "Current: " + time.FormatDigital(totalTime) + " "
+  var curTimeStringSize = string.Size(curTimeString)
+  var curTimeStringColor = "#00FFFF"
   
   var averageTimeString = ""
   var averageTimeStringSize = 0
   var averageStringColor = timeStringColors[1]
 
   var bestTimeString = ""
+  var bestTimeStringSize = 0
   var bestStringColor = timeStringColors[1]
   
+  var exitTimeString = ""
+  var exitTimeStringSize = 0
+  var exitStringColor = timeStringColors[1]
+  
+  var maxTimeBeforeExit = 0
+  var timeLeftTillExit = 0
+  var minsLeftTillExit = 0
+  var secsLeftTillExit = 0
+  ?U.Get("maxOverAvgToExitMult") > 0
+    maxTimeBeforeExit = loc.averageTime * U.Get("maxOverAvgToExitMult")
+    secsLeftTillExit = math.Floor((maxTimeBeforeExit - totalTime) / 30)
+    minsLeftTillExit = math.Floor(secsLeftTillExit / 60)
+    secsLeftTillExit -= minsLeftTillExit * 60
+    ?secsLeftTillExit < 10
+      secsLeftTillExit = "0" + secsLeftTillExit
+    exitTimeString = "Force Exit In: " + minsLeftTillExit + ":" + secsLeftTillExit + " "
+    exitTimeStringSize = string.Size(exitTimeString)
+    exitStringColor = getTimeColor(maxTimeBeforeExit - totalTime, maxTimeBeforeExit, true)
+  
   ?loc.averageTime > 0
-    averageTimeString = "(" + U.toPercent(totalTime, loc.averageTime) + " of " + time.FormatDigital(loc.averageTime) + ")"
+    averageTimeString = U.toPercent(totalTime, loc.averageTime) + " of Avg  (" + time.FormatDigital(loc.averageTime) + ")"
     averageTimeStringSize = string.Size(averageTimeString)
-    averageStringColor = getTimeColor(totalTime, loc.averageTime)
+    averageStringColor = getTimeColor(totalTime, loc.averageTime, false)
   ?loc.bestTime > 0
-    bestTimeString = "(" + U.toPercent(totalTime, loc.bestTime) + " of " + time.FormatDigital(loc.bestTime) + ")"
-    bestStringColor = getTimeColor(totalTime, loc.bestTime)
-        
-  printRight(startLine, mainStringColor, time.FormatDigital(totalTime), string.Size(time.FormatDigital(totalTime)) + averageTimeStringSize + 1)
-  printRight(startLine, averageStringColor, averageTimeString, 0)
+    bestTimeString = U.toPercent(totalTime, loc.bestTime) + " of Best (" + time.FormatDigital(loc.bestTime) + ")"
+    bestTimeStringSize = string.Size(bestTimeString)
+    bestStringColor = getTimeColor(totalTime, loc.bestTime, false)
+    
+  printRight(startLine, curTimeStringColor, curTimeString, 0)
   printRight(startLine + 1, bestStringColor, bestTimeString, 0)
+  printRight(startLine + 2, averageStringColor, averageTimeString, 0)
+  printRight(startLine + 3, exitStringColor, exitTimeString, 0)
 
 func Display()
   // === HUD Info Display ===
@@ -179,6 +205,8 @@ func Display()
   
   ?U.Get("errorMessage")
     >`25,0,#FF0000,@U.Get("errorMessage")@
+  ?U.Get("majorDamageAlert")
+    >`15,1,#FF9900,@U.Get("majorDamageAlert")@
 
   ?U.Get("hideHUD")
     printRight(0,"#FF0000","[Z] HUD", 0)
@@ -195,7 +223,7 @@ func Display()
   
   ?foe.damage > -1
     lineNum = displayFoe(lineNum, xStart)
-    >`@xStart@,@lineNum@,#DD0000,Lv@foe.level@ ..@foe.distance@, Dmg: @foe.damage@, State: @foe.state@:@U.toSeconds(foe.time)@
+    >`@xStart@,@lineNum@,#DD0000,Lv@foe.level@ ..@foe.distance@, Dmg: @foe.damage@, State: @foe.state@:@foe.time@
     lineNum++
     >`@xStart@,@lineNum@,#DD0000,+ @parseBuffString(foe.buffs.string)@
     lineNum++
@@ -289,7 +317,7 @@ func Display()
   ?U.Get("isActivating")
     printRight(rightLineNum, "#FF00FF", "ACTIVATING: [" + U.Get("isActivating") + "]", 15)
     
-  displayTimeData(24)
+  displayTimeData(22)
   
   lineNum = yStart
   rightLineNum = rightYStart
