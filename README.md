@@ -3,9 +3,7 @@
 Three files that, together, comprise the automation script for my Stone Story gaming. I make no claims to how optimal or capable this script is, as I put it together without seeking help from the larger Stone Story community (what can I say, I like to figure things out for myself)! I've added comments and some configuration features, which I'll outline below.
 
 ## Assumptions Before We Begin
-As this is an evolution of my script as I played through Stone Story, it presumes a fairly 'end game' build, with all of the Lost Treasures and a large collection of enchanted weapons and shields.  Some of this can be configured and toggled off, but you may need to poke around in the script and make some custom changes to perfectly fit your game (and inventory!)
-
-In particular, the script assumes you have the following items in your inventory. If you are missing any (or just want to change what to use/craft), you'll have to skim the script to make the necessary changes (or just accept the occasional "no \<X\> to equip" error message).
+As this is an evolution of my script as I played through Stone Story, it presumes a fairly 'end game' build, with all of the Lost Treasures and a large collection of enchanted weapons and shields. I have included checks to avoid throwing errors should you be lacking an item that the script expects, but know that the script operates best when you have the following in your inventory:
 
 - Bardiche ('big damage' and for cooldown ability)
 - Heavy Hammer (used vs. armor)
@@ -15,6 +13,8 @@ In particular, the script assumes you have the following items in your inventory
 - Fire Talisman
 - Dash Shield (no need to enchant or upgrade: just used for the dash)
 - Quarterstaff (enchant with cooldown reduction)
+
+Please post an Issue if you see any errors (such as "`no <X> to equip"`).
 
 ## Usage (PC)
 1. Download all three files (`Main.txt`, `Utilities.txt` and `HUD.txt`)
@@ -28,9 +28,8 @@ import Main
 ## Usage (Mobile)
 If you're unable to download files, or import from multiple sources, I've consolidated my scripts into a single file that you can copy & paste directly into your Mind Stone.  Note that some functionality (including the HUD) is missing.
 ### Warning: This was prepared very very quickly and has yet to be tested by me, so I apologize in advance for any bugs. DM me on Discord if you'd like me to let you know when a more robust version of this file is available!
-1. Go to this link: [Script for Mobile](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Mobile/MainMobile.txt)
-2. Copy and paste the entire contents of that page into your Mind Stone
-3. Go through the `=== CONFIG ===` section and set the values to match your game *(I have removed the comments explaining what each setting does from this version; [click here](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-PC/Main.txt) for a link to the PC version of the script to see what each setting does, or [here](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Mobile/MainMobileGuide.txt) for a (hopefully) mobile-friendly text guide)*
+1. Copy and paste the entire contents of [this page](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Mobile/MainMobile.txt) into your Mind Stone
+2. Go through the `=== CONFIG ===` section and set the values to match your game *(I have removed the explanatory comments to keep the wordcount low for mobile users; [click here](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-PC/Main.txt) to see the CONFIG section of the PC script, which contains all of the comments, or [click here](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Mobile/MainMobileGuide.txt) for a (hopefully) mobile-friendly text guide)*
 
 ## Gameplay (PC ONLY)
 The following keyboard controls can be used to change the behavior of the script during a run:
