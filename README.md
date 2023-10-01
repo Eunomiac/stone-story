@@ -14,7 +14,7 @@ As this is an evolution of my script as I played through Stone Story, it presume
 - Dash Shield (no need to enchant or upgrade: just used for the dash)
 - Quarterstaff (enchant with cooldown reduction)
 
-Please post an Issue if you see any errors (such as "`no <X> to equip"`).
+Please post an Issue if you see any errors (such as "`no <X> to equip"`) while running the script without all of the above items.
 
 ## Usage (PC)
 1. Download all three files (`Main.txt`, `Utilities.txt` and `HUD.txt`)
