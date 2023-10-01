@@ -1,0 +1,182 @@
+// ==== CONFIG GUIDE ====
+// ---- THRESHOLD VALUES ----
+
+var smiteThreshold = 6
+  // Min number of foes to activate Blade of the Fallen God
+var dmgDebuffThreshold = 7
+  // Total damage debuff on yourself before switching out of low-damage weapons
+var splashThreshold = 3
+  // Total number of foes needed to trigger use of splashing weapons
+var foeArmorThreshold = 50
+  // If foe's armor exceeds this, switch to armor-penetrating weapon
+var fastArmorShieldMax = 14
+  // Max armor of "fast armor"-enchanted shield, if you have one ('fastArmorShield', below)
+var devourFireRuneThreshold = 3
+  // The number of ignition stacks on an enemy required to trigger Cinderwisp's devour.
+  //   Set to 0 to never trigger devour.
+var devourFireRuneBossThreshold = 10
+  // Same as above, but for bosses.
+  //   Set to 0 to never trigger devour against bosses.
+                                
+// ---- ARSENAL ----
+// *** If you don't have a weapon for the indicated slot, set the value to 'false'. ***
+
+var splashMeleeWeapon = "big aether sword U"
+  // Name of unmaking splash weapon for mobs
+var healthHammer = "vigor hammer"
+  // Name of rune hammer enchanted with health bonus
+var antiArmorMeleeWeapon = "heavy hammer"
+  // Name of melee weapon to equip vs. strong armor
+var debuffDamageWeapon = "poison sword dP"
+  // Name of weapon to apply debuff_damage (poison)
+var debuffDoTWeapon = "fire sword dF"
+  // Name of weapon to apply debuff_dot (fire)
+var debuffChillWeapon = "ice sword dI"
+  // Name of weapon to apply debuff_chill (ice)                                           
+var magicRangedWeapon = "vigor staff"
+  // Name of magical ranged weapon (able to hit physical-immune enemies)
+var lifeStealMeleeWeapon = false
+  // Name of health-stealing melee weapon
+var lifeStealRangedWeapon = false
+  // Name of health-stealing ranged weapon
+var lifeStealShield = "vigor shield h"
+  // Name of heal-when-hit shield
+var icePillarWeapon = "big aether sword U"
+  // Name of weapon to use when facing ice pillars/wall in Icy Ridge
+var fastArmorShield = "compound shield +10"
+  // Name of "fast armor"-enchanted shield
+var strongArmorShield = "compound shield +11"
+  // Name of "high armor"-enchanted shield
+var iceWandA = "ice wand +15"
+  // Name of first speed-enchanted chill wand for smite combo
+var iceWandB = "ice wand +12"
+  // Name of second speed-enchanted chill wand for smite combo
+var iceWandBossA = "ice wand 1* +11"
+  // Name of first low-star speed-enchanted chill wand for smite combo vs. bosses
+var iceWandBossB = "ice wand 1* +10"
+  // Name of second low-star speed-enchanted chill wand for smite combo vs. bosses
+var stoneHammerA = "stone hammer +10"
+  // Name of first stun-enchanted stone hammer for stun-locking
+var stoneHammerB = "stone hammer +6"
+  // Name of second stun-enchanted stone hammer for stun-locking
+
+// === ELEMENTAL ARRAYS ===
+// The items in each 'elem-' array correspond to the elements in this order:
+//   None -> Poison -> Vigor -> Aether -> Fire -> Ice
+
+// ELEMENTAL WEAPONS ARRAY: Names of MELEE weapons to equip when facing a vulnerable element.
+//   Set to 'mainWeapon' if you don't have an item for a given slot.
+var elemWeapons = [
+^ mainWeapon,           // NONE
+^ "poison sword D",     // POISON (vs. Vigor)
+^ "vigor sword D",      // VIGOR (vs. Aether)
+^ "aether sword D",     // AETHER (vs. Fire)
+^ "fire sword D",       // FIRE (vs. Ice)
+^ "ice sword +11 D"     // ICE (vs. Poison)
+]
+
+// ELEMENTAL OFFHAND ARRAY: Names of OFFHAND WEAPONS to equip when facing a vulnerable element.
+//   Especially good against certain bosses.
+//   Set to 'false' if you don't have an item for a given slot.
+var elemOffHand = [
+^ false,                // NONE
+^ false,                // POISON (vs. Vigor)
+^ false,                // VIGOR (vs. Aether)
+^ false,                // AETHER (vs. Fire)
+^ false,                // FIRE (vs. Ice)
+^ "ice sword +10 D"     // ICE (vs. Poison)
+]
+
+// ELEMENTAL RANGED ARRAY: Names of RANGED WEAPONS to equip when facing a vulnerable element.
+//   Set to 'mainRanged' if you don't have an item for a given slot.
+var elemRanged = [  
+^ mainRanged,           // NONE
+^ "poison crossbow D",  // POISON (vs. Vigor)
+^ "vigor staff D",      // VIGOR (vs. Aether)
+^ "aether crossbow D",  // AETHER (vs. Fire)
+^ "fire crossbow D",    // FIRE (vs. Ice)
+^ "ice crossbow D"      // ICE (vs. Poison)
+]
+
+// ELEMENTAL SHIELDS ARRAY: Names of SHIELDS to equip when facing a vulnerable element.
+//   Set to 'mainShield' if you don't have an item for a given slot.
+var elemShields = [
+^ mainShield,           // BASE
+^ mainShield,           // POISON (vs. Vigor)
+^ mainShield,           // VIGOR (vs. Aether)
+^ mainShield,           // AETHER (vs. Fire)
+^ mainShield,           // FIRE (vs. Ice)
+^ mainShield            // ICE (vs. Poison)
+]
+
+// === LOCATION ARRAYS ===
+// The items in each of the following arrays correspond to the game's levels in this order:
+//   Rocky Plateau -> Deadwood Canyon -> Caves of Fear -> Mushroom Forest
+//       -> Haunted Halls -> Boiling Mine -> Icy Ridge -> Temple
+
+// POTIONS ARRAY: Names of potions to brew for each location.
+var locPotions = [
+^"vampiric",           // Rocky Plateau 
+^"vampiric",           // Deadwood Canyon
+^"vampiric",           // Caves of Fear
+^"vampiric",           // Mushroom Forest
+^"vampiric",           // Haunted Halls
+^"berserk",            // Boiling Mine
+^"berserk",            // Icy Ridge
+^"berserk"             // Temple
+]
+
+// DEBUFF THRESHOLD ARRAYS: These provide a way for you to turn off trying to apply debuffs against
+//           certain bosses, or to skip applying them when the boss is nearly dead.
+//    - 0: Set to 0 do ALWAYS apply the given debuff against the boss of that location.
+//    - 1: Set to 1 to NEVER apply the given debuff against the boss of that location.
+//    - Between: When boss is lower than this fraction of their maximum (health + armor), stop
+//        trying to apply the given debuff.
+
+// DEBUFF THRESHOLD: DEBUFF DMG (Poison)
+var poisonDebuffThreshold = [ 
+^0,    // Dysangelos (Rocky Plateau)
+^1,    // Poena (Deadwood Canyon)
+^1,    // Bolesh (Caves of Fear)
+^0.25, // Morel (Mushroom Forest)
+^1,    // Pallas (Haunted Halls)
+^1,    // Bronze Guardian (Boiling Mine)
+^0.15, // Hrimnir (Icy Ridge)
+^0.15  // Nagaraja (Temple)
+]
+
+// DEBUFF THRESHOLD: CHILL (Ice)
+var iceDebuffThreshold = [
+^0.1,  // Dysangelos (Rocky Plateau)
+^1,    // Poena (Deadwood Canyon)
+^1,    // Bolesh (Caves of Fear)
+^0.1,  // Morel (Mushroom Forest)
+^0.1,  // Pallas (Haunted Halls)
+^1,    // Bronze Guardian (Boiling Mine)
+^1,    // Hrimnir (Icy Ridge)
+^1     // Nagaraja (Temple)
+]
+
+// DEBUFF THRESHOLD: DoT (Fire)
+var fireDebuffThreshold = [
+^0.05, // Dysangelos (Rocky Plateau)
+^1,    // Poena (Deadwood Canyon)
+^1,    // Bolesh (Caves of Fear)
+^0.1,  // Morel (Mushroom Forest)
+^0.05, // Pallas (Haunted Halls)
+^1,    // Bronze Guardian (Boiling Mine)
+^0.15, // Hrimnir (Icy Ridge)
+^0.05  // Nagaraja (Temple)
+]
+
+// DEBUFF THRESHOLD: FEEBLE (Cultist Mask)
+var maskDebuffThreshold = [
+^0.15, // Dysangelos (Rocky Plateau)
+^1,    // Poena (Deadwood Canyon)
+^0.15, // Bolesh (Caves of Fear)
+^0.15, // Morel (Mushroom Forest)
+^0.15, // Pallas (Haunted Halls)
+^1,    // Bronze Guardian (Boiling Mine)
+^0.15, // Hrimnir (Icy Ridge)
+^1     // Nagaraja (Temple)
+]
