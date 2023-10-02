@@ -14,7 +14,7 @@ As this is an evolution of my script as I played through Stone Story, it was ini
 - a Dash Shield (no need to enchant or upgrade: just used for the dash)
 - a Quarterstaff (enchant with cooldown reduction)
 
-> ## :warning: WARNING :warning: 
+> [!WARNING]
 > Be sure to break apart all unwanted zero-star items in your inventory before using this script, or the script may erroneously equip something it shouldn't!
 
 Please post an Issue if you see any errors (such as "`no <X> to equip"`) while running the script without all of the above items.
@@ -30,7 +30,10 @@ import Main
 
 ## Usage (Mobile)
 If you're unable to download files, or import from multiple sources, I've consolidated my scripts into a single file that you can copy & paste directly into your Mind Stone.  Note that some functionality (including the HUD) is missing.
-### Warning: This was prepared very very quickly and has yet to be tested by me, so I apologize in advance for any bugs. DM me on Discord if you'd like me to let you know when a more robust version of this file is available!
+
+> [!WARNING]
+> This was prepared very very quickly and has yet to be tested by me, so I apologize in advance for any bugs. DM me on Discord if you'd like me to let you know when a more robust version of this file is available!
+
 1. Copy and paste the entire contents of [this page](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Mobile/MainMobile.txt) into your Mind Stone
 2. Go through the `=== CONFIG ===` section and set the values to match your game *(I have removed the explanatory comments to keep the wordcount low for mobile users; [click here](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-PC/Main.txt) to see the CONFIG section of the PC script, which contains all of the comments, or [click here](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Mobile/MainMobileGuide.txt) for a (hopefully) mobile-friendly text guide)*
 
