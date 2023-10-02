@@ -1,3 +1,7 @@
+// Video showing this script in action: https://youtu.be/EFTAjH8eCd0?si=drqSofQ34kGbGHaq
+//  (note: digging up boulders was disabled when recording the video to reduce its
+//   duration; boulders will be dug up when you run the script though!)
+
 // === CONFIG ===
 // Default Weapons (MUST be set!)
 var defaultOneHandedMeleeWeapon = "big aether sword U"
