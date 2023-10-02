@@ -17,7 +17,7 @@ As this is an evolution of my script as I played through Stone Story, it was ini
 > [!WARNING]
 > Be sure to break apart all unwanted zero-star items in your inventory before using this script, or the script may erroneously equip something it shouldn't!
 
-Please post an Issue if you see any errors (such as "`no <X> to equip"`) while running the script. Please include the line number and file (i.e. `Main`, `HUD` or `Utilities`) displayed by the in-game error message.
+Please post an Issue if you see any errors (such as "`no <X> to equip"`) while running the script. Be sure to include the full text of the in-game error message, including the line number and the file (i.e. `Main`, `HUD` or `Utilities`) if one is referenced.
 
 ## Usage (PC)
 1. Download all three files (`Main.txt`, `Utilities.txt` and `HUD.txt`)
@@ -48,5 +48,5 @@ The following keyboard controls can be used to change the behavior of the script
 - `[W]` --- Immediately equip & activate Blade of the Fallen God
 
 # Learning StoneScript
-The [Scripts-Annotated](https://github.com/Eunomiac/stone-story/tree/71a3a8ac396cbab9e1ecf6a541c8845ec9bb35f0/Scripts-Annotated) folder contains scripts that aren't part of my main scripts, but may be helpful to people just starting out or who want to learn StoneScript.  Every script in this folder is fully annotated with comments explaining almost every line.  Currently there's only one script in the folder, but I'll add more and update the list below when I do:
+The [Scripts-Annotated](https://github.com/Eunomiac/stone-story/tree/71a3a8ac396cbab9e1ecf6a541c8845ec9bb35f0/Scripts-Annotated) folder contains scripts that aren't part of my main scripts, but may be helpful to people just starting out or who want to learn StoneScript.  Every script in this folder is fully annotated with comments explaining almost every line.  Currently there's only one script in there, but I'll add more and update the list below when I do:
 - [SimpleRockyPlateau](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Annotated/SimpleRockyPlateau-Annotated.txt) --- A bare-bones script for farming the Rocky Plateau level _(requested by someone who was out of stones!)_. It includes Attack Animation Cancelling, as well as full combat logic for all three phases of the Dysangelos boss battle. It's fully annotated, and I've uploaded [a video showing it in action](https://youtu.be/EFTAjH8eCd0). 
