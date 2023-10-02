@@ -41,9 +41,9 @@ func eq(item)
   ?item & Type(item) = "string" & item.GetCount(item) > 0
     // Make sure you haven't already assigned stuff to be equipped that this would overwrite.
     ?(!eqBoth & !eqLeft & !eqRight)
-	  // Store the item you'll be equipping into a variable
+      // Store the item you'll be equipping into a variable
       eqBoth = item
-	  // Return 'true' in case the script wants to know if this was successful
+      // Return 'true' in case the script wants to know if this was successful
       return true
   // Return 'false' if the item is rejected for some reason.
   return false
@@ -71,10 +71,10 @@ func activateItem(item)
   ?item & Type(item) = "string" & item.GetCount(item) > 0
     // Check that you have assigned this item to be equipped (otherwise you can't activate it!).
     ?[eqBoth, eqLeft, eqRight].Contains(item)
-	  // Store the name of the item you want to activate: When it comes time to call the 'activate'
-	  //   function, the script will confirm that you have the item you want to activate equipped.
+      // Store the name of the item you want to activate: When it comes time to call the 'activate'
+      //   function, the script will confirm that you have the item you want to activate equipped.
       actItem = item
-	  // Return 'true' in case the script wants to know if this was successful
+      // Return 'true' in case the script wants to know if this was successful
       return true
   // Return 'false' if the item is rejected for some reason.
   return false
@@ -104,9 +104,9 @@ func EquipAndActivate()
   // At the very start of a run ... 
   ?loc.begin
     // ... determine the type of potion you have, if any. This will be checked later to see when to use it.
-	//   (Since your potion doesn't change during a run, checking the type of potion
-	//    you have can be done just once, inside a loc.begin block. It's good practice to keep as much
-	//    code inside a '?loc.begin' block as possible, since everything else will run every single frame.)
+    //   (Since your potion doesn't change during a run, checking the type of potion
+    //    you have can be done just once, inside a loc.begin block. It's good practice to keep as much
+    //    code inside a '?loc.begin' block as possible, since everything else will run every single frame.)
     ?item.potion ! empty
       ?item.potion = cleansing | item.potion = defensive | item.potion = healing | item.potion = vampiric
         potionType = "healing"
@@ -118,7 +118,7 @@ func EquipAndActivate()
         potionType = "defensive"
       :
         potionType = "other"
-		
+        
   // Initialize variables to their default values for the start of each frame
   curMeleeWeapon = defaultOneHandedMeleeWeapon
   eqBoth = false
@@ -142,56 +142,56 @@ func EquipAndActivate()
   ?foe = dysangelos | foe = acronian
   
     // Attack Animation Cancelling: This is the trick that speeds up your attacks by cancelling
-	//  their animations as soon as they have dealt damage.
-	// A weapon's state becomes '3' as soon as it deals damage, so this simply equips a dummy
-	//  item for a single frame to interrupt the animation.
+    //  their animations as soon as they have dealt damage.
+    // A weapon's state becomes '3' as soon as it deals damage, so this simply equips a dummy
+    //  item for a single frame to interrupt the animation.
     ?item.left.state = 3
       equipL sword *0
     ?item.right.state = 3
       equipR wand *0
     
-	// Dodge Check: If you're facing Dysangelos in a certain phase, equip the mind stone to dodge
-	//   whenever he's about to hit you with something big.
+    // Dodge Check: If you're facing Dysangelos in a certain phase, equip the mind stone to dodge
+    //   whenever he's about to hit you with something big.
     ?foe = dysangelos & foe = phase1 & foe.state = 33 & item.GetCooldown("mind") <= 0
-	  // Prevent yourself from dashing back into damage for two seconds after you dodge,
-	  //   by setting dashFreeze to the current time, and adding two seconds to that (= 60 frames)
+      // Prevent yourself from dashing back into damage for two seconds after you dodge,
+      //   by setting dashFreeze to the current time, and adding two seconds to that (= 60 frames)
       dashFreeze = totalTime + 60
       eq("mind")
     :?foe = dysangelos & foe = phase3 & foe.state = 115 & foe.time >= 60 & item.GetCooldown("mind") <= 0
       dashFreeze = totalTime + 60
       eq("mind")
     :
-	  // If you're not dodging ...
-	  
-	  // Check to see if any potions should be used.
-	  //   First, make sure you're facing Dysangelos -- don't want to waste your potion
-	  //     on the mini-boss, if he shows up!
-	  ?foe = dysangelos
-	    // .. use a healing potion if you're at half hp while fighting Dysangelos.
+      // If you're not dodging ...
+      
+      // Check to see if any potions should be used.
+      //   First, make sure you're facing Dysangelos -- don't want to waste your potion
+      //     on the mini-boss, if he shows up!
+      ?foe = dysangelos
+        // .. use a healing potion if you're at half hp while fighting Dysangelos.
         ?potionType = healing & hp < 0.5 * maxhp
           activate potion
-	    // .. use an offensive potion as soon as Dysangelos finishes his intro animation.
+        // .. use an offensive potion as soon as Dysangelos finishes his intro animation.
         :?potionType = offensive & foe.state > 1
           activate potion
-	    // .. use an armor-busting potion when Dysangelos takes on his armored form in phase 3.
+        // .. use an armor-busting potion when Dysangelos takes on his armored form in phase 3.
         :?potionType = armor foe = phase3 & foe.armor > 0
           activate potion
-	    // .. use a defensive potion when Dysangelos is about to use his big phase 3 attack.
+        // .. use a defensive potion when Dysangelos is about to use his big phase 3 attack.
         :?potionType = defensive foe = phase3 & foe.state = 115
           activate potion
     
-	  // Dysangelos regularly changes the elements he's weak to, and he can also buff himself with
-	  //   protection against a particular element.  Below, for each element, the script checks:
-	  //     1) Do you have an elemental weapon configured for that element?
-	  //     2) Is Dysangelos currently vulnerable to that element?
-	  //     3) Is Dysangelos NOT buffed with defense against that element?
-	  // If ALL of the three conditions are met, 'curMeleeWeapon' is set to the correct weapon.
-	  //   Otherwise, the next element on the list is checked. If none of the checks pass,
-	  //   'curMeleeWeapon' is set to the 'defaultOneHandedMeleeWeapon' you configured.
-	  //  (We don't use one of the 'eq' functions yet, because we might want to equip something
-	  //    other than your elemental weapon: This just determines what your melee weapon should be
-	  //    if we do decide to equip it.)
-	  
+      // Dysangelos regularly changes the elements he's weak to, and he can also buff himself with
+      //   protection against a particular element.  Below, for each element, the script checks:
+      //     1) Do you have an elemental weapon configured for that element?
+      //     2) Is Dysangelos currently vulnerable to that element?
+      //     3) Is Dysangelos NOT buffed with defense against that element?
+      // If ALL of the three conditions are met, 'curMeleeWeapon' is set to the correct weapon.
+      //   Otherwise, the next element on the list is checked. If none of the checks pass,
+      //   'curMeleeWeapon' is set to the 'defaultOneHandedMeleeWeapon' you configured.
+      //  (We don't use one of the 'eq' functions yet, because we might want to equip something
+      //    other than your elemental weapon: This just determines what your melee weapon should be
+      //    if we do decide to equip it.)
+      
       ?oneHandedMeleeVsVigor & foe = vigor & !(foe.buffs.string = adaptive & foe.buffs.string = poison)
         curMeleeWeapon = oneHandedMeleeVsVigor
       :?oneHandedMeleeVsAether & foe = aether & !(foe.buffs.string = adaptive & foe.buffs.string = vigor)
@@ -205,32 +205,32 @@ func EquipAndActivate()
       :
         curMeleeWeapon = defaultOneHandedMeleeWeapon
           
-	  // Is your dash shield off cooldown?
+      // Is your dash shield off cooldown?
       // Is dashing NOT frozen (by dashFreeze)?
-	  // Are you within the right range to dash?
+      // Are you within the right range to dash?
       //   If ALL of the above are true, equip your dash shield (to dash)
       ?item.GetCooldown("dash") <= 0 & (Type(dashFreeze) ! int | totalTime >= dashFreeze) & foe.distance >= 11 & foe.distance <= 15
         eqR("dash")
         
       // If we're not dashing, are we close enough to the enemy to start attacking?
       :?foe.distance <= 7
-	  
-	    // DEBUFF CHECK: Here we apply debuffs to Dysangelos, if possible.
-		// Dysangelos might have a 'protection' buff that makes debuffing briefly impossible: We check that first.
+      
+        // DEBUFF CHECK: Here we apply debuffs to Dysangelos, if possible.
+        // Dysangelos might have a 'protection' buff that makes debuffing briefly impossible: We check that first.
         ?foe.buffs.string ! protection
-		// Next, we check to make sure you aren't currently under the effect of an offensive potion's buff, because
-		//   we don't want to waste the potion's duration applying debuffs when the potion effect is increasing
-		//   your damage output.
+        // Next, we check to make sure you aren't currently under the effect of an offensive potion's buff, because
+        //   we don't want to waste the potion's duration applying debuffs when the potion effect is increasing
+        //   your damage output.
         ^& buffs.string ! berserk & buffs.string ! lucky & buffs.string ! strength
-		  
-		  // Now we check for the four main debuff types in sequence. For each one, we check:
-		  //   1) Does Dysangelos NOT already have this debuff (or six stacks of it, for "chill")?
-		  //   2) Is Dysangelos NOT immune to this debuff?
-		  //   3) Do you have an item capable of applying this debuff in your inventory?
-		  // If ALL of the three conditions are met, we equip the proper weapon as well as a Cultist Mask
-		  //   if you have one (the Cultist Mask makes debuffs last longer when it's equipped).
-		  // Otherwise, we move onto checking for the next debuff in the list.
-		  
+          
+          // Now we check for the four main debuff types in sequence. For each one, we check:
+          //   1) Does Dysangelos NOT already have this debuff (or six stacks of it, for "chill")?
+          //   2) Is Dysangelos NOT immune to this debuff?
+          //   3) Do you have an item capable of applying this debuff in your inventory?
+          // If ALL of the three conditions are met, we equip the proper weapon as well as a Cultist Mask
+          //   if you have one (the Cultist Mask makes debuffs last longer when it's equipped).
+          // Otherwise, we move onto checking for the next debuff in the list.
+          
           ?foe.debuffs.string ! damage & foe ! immune_to_debuff_damage & item.GetCount("dP") > 0
             eqL("dP")
             eqR("mask")
@@ -241,17 +241,17 @@ func EquipAndActivate()
             eqL("dI")
             eqR("mask")
           :?foe.debuffs.string ! feeble & item.GetCount("mask") > 0
-		  // For the fourth debuff, "feeble", we have to activate the Cultist Mask to apply it.
-		  // So, we need to make sure it's not on cooldown and can be activated:
+          // For the fourth debuff, "feeble", we have to activate the Cultist Mask to apply it.
+          // So, we need to make sure it's not on cooldown and can be activated:
           ^& item.GetCooldown("mask") <= 0 & item.CanActivate()
-		    // If all's good, attempt to equip it
+            // If all's good, attempt to equip it
             ?eqR("mask")
-			  // If that works, schedule activating it for the end of the frame.
+              // If that works, schedule activating it for the end of the frame.
               activateItem("mask")
-			  
-	      // If no debuffs are necessary, check to see if Dysangelos is in his armored form.
+              
+          // If no debuffs are necessary, check to see if Dysangelos is in his armored form.
           :?foe.armor > 0
-		    // If he is, equip the 'VsArmor' weapon you configured (unless both are 'false')
+            // If he is, equip the 'VsArmor' weapon you configured (unless both are 'false')
             ?oneHandedMeleeVsArmor
               eqL(oneHandedMeleeVsArmor)
             :?twoHandedMeleeVsArmor
@@ -262,7 +262,7 @@ func EquipAndActivate()
     // Is your Health less than maximum? If so, equip the ouroboros stone for passive healing if you have one.
     ?item.GetCount("ouroboros") > 0 & hp < maxhp
       eqL("ouroboros")
-	// Is there something to pick up on the ground? If so, equip the star stone for its magnet effect if you have one.
+    // Is there something to pick up on the ground? If so, equip the star stone for its magnet effect if you have one.
     :?item.GetCount("star") > 0 & pickup.distance < 13
       eqL("star")
     // Otherwise, equip your shovel so you can harvest those boulders.
