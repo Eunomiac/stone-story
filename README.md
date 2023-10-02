@@ -3,16 +3,19 @@
 Three files that, together, comprise the automation script for my Stone Story gaming. I make no claims to how optimal or capable this script is, as I put it together without seeking help from the larger Stone Story community (what can I say, I like to figure things out for myself)! I've added comments and some configuration features, which I'll outline below.
 
 ## Assumptions Before We Begin
-As this is an evolution of my script as I played through Stone Story, it presumes a fairly 'end game' build, with all of the Lost Treasures and a large collection of enchanted weapons and shields. I have included checks to avoid throwing errors should you be lacking an item that the script expects, but know that the script operates best when you have the following in your inventory:
+As this is an evolution of my script as I played through Stone Story, it was initially coded for a fairly 'end game' build, with all of the Lost Treasures and a large collection of enchanted weapons and shields. I have since added checks and validation to (hopefully) ensure the script functions without presuming anything about the contents of your inventory, but know that the script operates best when you have the following:
 
-- Bardiche ('big damage' and for cooldown ability)
-- Heavy Hammer (used vs. armor)
-- Blade of the Fallen God
-- Cultist Mask
-- Bashing Shield
-- Fire Talisman
-- Dash Shield (no need to enchant or upgrade: just used for the dash)
-- Quarterstaff (enchant with cooldown reduction)
+- a Bardiche ('big damage' and for cooldown ability)
+- a Heavy Hammer (used vs. armor)
+- a Blade of the Fallen God
+- a Cultist Mask
+- a Bashing Shield
+- a Fire Talisman
+- a Dash Shield (no need to enchant or upgrade: just used for the dash)
+- a Quarterstaff (enchant with cooldown reduction)
+
+> ## :warning: WARNING :warning: 
+> Be sure to break apart all unwanted zero-star items in your inventory before using this script, or the script may erroneously equip something it shouldn't!
 
 Please post an Issue if you see any errors (such as "`no <X> to equip"`) while running the script without all of the above items.
 
@@ -37,8 +40,10 @@ The following keyboard controls can be used to change the behavior of the script
 - `[S]` --- Enable/Disable using the Quarterstaff to accelerate through the level
 - `[A]` --- Enable/Disable trying to pick off kills with the Skeleton Arm _(to satisfy the quest)_
 - `[C]` --- Enable/Disable forced melee combat & dashing over ranged weapons _(for maximum speed)_
-- `[SHIFT]` --- HOLD to force-equip a (configurable) melee weapon
-- `[CTRL]` --- HOLD to force-equip a (configurable) ranged weapon
-- `[X]` --- HOLD to force-equip a (configurable) shield or offhand weapon
+- `[X]` --- HOLD to force-equip a (configurable) ranged weapon
 - `[D]` --- Immediately trigger a dash by equipping Bash Shield or a Dash Shield
 - `[W]` --- Immediately equip & activate Blade of the Fallen God
+
+# Learning StoneScript
+The [Scripts-Annotated](https://github.com/Eunomiac/stone-story/tree/71a3a8ac396cbab9e1ecf6a541c8845ec9bb35f0/Scripts-Annotated) folder contains scripts that aren't part of my main scripts, but may be helpful to people just starting out or who want to learn StoneScript.  Every script in this folder is fully annotated with comments explaining almost every line.  Currently there's only one script in the folder, but I'll add more and update the list below when I do:
+- [SimpleRockyPlateau](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Annotated/SimpleRockyPlateau-Annotated.txt) --- A bare-bones script for farming the Rocky Plateau level _(requested by someone who was out of stones!)_. It includes Attack Animation Cancelling, as well as full combat logic for all three phases of the Dysangelos boss battle. It's fully annotated, and I've uploaded [a video showing it in action](https://youtu.be/EFTAjH8eCd0). 
