@@ -111,17 +111,16 @@ func EquipAndActivate()
     //   (Since your potion doesn't change during a run, checking the type of potion
     //    you have can be done just once, inside a loc.begin block. It's good practice to keep as much
     //    code inside a '?loc.begin' block as possible, since everything else will run every single frame.)
-    ?item.potion ! empty
-      ?item.potion = cleansing | item.potion = defensive | item.potion = healing | item.potion = vampiric
-        potionType = "healing"
-      :?item.potion = lucky | item.potion = berserk | item.potion = lightning
-        potionType = "offensive"
-      :?item.potion = strength
-        potionType = "armor"
-      :?item.potion = invisibility
-        potionType = "defensive"
-      :
-        potionType = "other"
+    ?item.potion = cleansing | item.potion = defensive | item.potion = healing | item.potion = vampiric
+      potionType = "healing"
+    :?item.potion = lucky | item.potion = berserk | item.potion = lightning
+      potionType = "offensive"
+    :?item.potion = strength
+      potionType = "armor"
+    :?item.potion = invisibility
+      potionType = "defensive"
+    :
+      potionType = "other"
         
   // Initialize variables to their default values for the start of each frame
   curMeleeWeapon = defaultOneHandedMeleeWeapon
