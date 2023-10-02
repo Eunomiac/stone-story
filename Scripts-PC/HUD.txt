@@ -4,11 +4,10 @@ var timeStringColors = ["#00FF00", "#FFFF00", "#FF0000"]
 
 func printRight(lNum, color, message, minSize)
   message = message + ""
-  var xRight = 87
   var mSize = string.Size(message)
   ?minSize > mSize
     mSize = minSize
-  var xStart = xRight - mSize
+  var xStart = screen.w - mSize
   >`@xStart@,@lNum@,@color@,@message@
   
 func printCooldown(x, y, twoChar, key)
