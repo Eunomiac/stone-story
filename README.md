@@ -36,7 +36,7 @@ If you're unable to download files, or import from multiple sources, I've consol
 
 1. Copy and paste the entire contents of [this page](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Mobile/MainMobile.txt) into a text editor (not your Mind Stone, as the wonky line breaks in there will make configuring the script in the next step a real headache).
 2. Go through the `=== CONFIG ===` section and set the values to match your game *(I have removed the explanatory comments to keep the wordcount low for mobile users; [click here](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-PC/Main.txt) to see the CONFIG section of the PC script, which contains all of the comments, or [click here](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Mobile/MainMobileGuide.txt) for a (hopefully) mobile-friendly text guide)*
-3. Copy and paste the whole thing directly into your Mind Stone.  It will _look_ awful, with lines screaming off to the right in a display of reckless disregard for page boundaries and common sense --- but it should still _work_ just fine.
+3. Copy and paste the whole thing directly into your Mind Stone.  It will _look_ awful, with lines screaming off to the right in a brazen display of reckless disregard for page boundaries and common sense --- but it should _work_ just fine.
 
 ## Gameplay (PC ONLY)
 The following keyboard controls can be used to change the behavior of the script during a run:
