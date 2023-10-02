@@ -2,6 +2,11 @@ var U = import Utilities
 
 var timeStringColors = ["#00FF00", "#FFFF00", "#FF0000"]
 
+// OK SYMBOLS: →↓∆∞≈│║▀█░▒▓▲▼○☼♀♂♠♣♥♦♪♫¦§©«®°²³¶¹»¼½¾×Ø÷øʘΘΔψДФХфЖжд‖†‡•⁞±¤…ΦГ ‒ – — ―≠
+// BAD SYMBOLS: ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ▬◊●♡⸨⸩⸿⸫⸪⸬ǁǂȸȹɅɸΓΞϴ҈֎א٭۝۞۩۷۸ฒณᴀᴄᴅᴁᴬᴱᴰᴪᵃᵉᵜ‣※‼‽⁂⁃⁅⁆⁋⁐⁎⁑⁒⁓⁕⁖⁘⁙⁚⁛⁜⁝₁₂₃ₐₑ⁴⁵⁶₊₍₎ℨℾℿ⸿⸫⸬⸭⸪Ψ‐Ɐ↕↨↔√⌂
+// Element Symbols: ∞φ❄*♥
+
+
 func printRight(lNum, color, message, minSize)
   message = message + ""
   var mSize = string.Size(message)
@@ -19,7 +24,6 @@ func printCooldown(x, y, twoChar, key)
   
   >`@x@,@y@,@color@,@twoChar@ @U.toSeconds(item.GetCooldown(key))@
   
-
 func displayControls(lNum)
   ?U.Get("isForcingDash")
     printRight(lNum,"#00FF00","[D]", 7)
@@ -147,49 +151,53 @@ func parseBuffString(buffString)
     buffParts = string.Split(buffStr, ":")
     ?Type(buffParts) = Type([]) & buffParts.Count() = 4
       var buffName = buffParts[1]
-      var nameParts = string.split(buffName, "_")
-      for namePart : nameParts
-        ?buffDisplayString ! false
-          ?string.Equals(namePart, "quarterstaff")
-            buffDisplayString = false
-          :?string.Equals(namePart, "bardiche")
-            buffDisplayString = false
-          :?string.Equals(namePart, "debuff")
-            buffDisplayString = "DmgDown"
-          :?string.Equals(namePart, "pocket")
-            buffDisplayString = "P-Pocket"
-          :?string.Equals(namePart, "berserk")
-            buffDisplayString = "Berserk"
-          :?string.Equals(namePart, "vampiric")
-            buffDisplayString = "Vamp"
-          :?string.Equals(namePart, "lucky")
-            buffDisplayString = "Lucky"
-          :?string.Equals(namePart, "experience")
-            buffDisplayString = "+XP"
-          :?string.Equals(namePart, "strength")
-            buffDisplayString = "Strength"
-          :?string.Equals(namePart, "invisibility")
-            buffDisplayString = "Invis"
-          :?string.Equals(namePart, "buff")
-            buffDisplayString = "DmgBuff"
-          :?string.Equals(namePart, "duration")
-            buffDisplayString = "DmgDown"
-          :?string.Equals(namePart, "dot")
-            buffDisplayString = "DoT"
-          :?string.Equals(namePart, "chill")
-            buffDisplayString = "Chill"
-          :?string.Equals(namePart, "fatigue")
-            buffDisplayString = "ArmDown"
-          :?string.Equals(namePart, "feeble")
-            buffDisplayString = "Feeble"
-          :?string.Equals(namePart, "smite")
-            buffDisplayString = "Smite"
-          :?string.Equals(namePart, "stun")
-            buffDisplayString = "Stun"
-          :?string.Equals(namePart, "ignition")
-            buffDisplayString = "Ignite"
-          :?string.Equals(namePart, "poena")
-            buffDisplayString = "REFLECT"
+      ?replaceKeywordKeys.Contains(buffName)
+        buffDisplayString = replaceKeywordVals[replaceKeywordKeys.IndexOf(buffName)]
+      :
+        var nameParts = string.split(buffName, "_")
+        for namePart : nameParts
+          // →↓∆∞≈│║▀█░▒▓▲▼○☼♀♂♠♣♥♦♪♫¦§©«®°²³¶¹»¼½¾×Ø÷øʘΘΔψДФХфЖжд‖†‡•⁞±¤…ΦГ ‒ – — ―≠
+          ?buffDisplayString ! false
+            ?string.Equals(namePart, "quarterstaff")
+              buffDisplayString = false
+            :?string.Equals(namePart, "bardiche")
+              buffDisplayString = false
+            :?string.Equals(namePart, "debuff")
+              buffDisplayString = "DmgDown"
+            :?string.Equals(namePart, "pocket")
+              buffDisplayString = "P-Pocket"
+            :?string.Equals(namePart, "berserk")
+              buffDisplayString = "Berserk"
+            :?string.Equals(namePart, "vampiric")
+              buffDisplayString = "Vamp"
+            :?string.Equals(namePart, "lucky")
+              buffDisplayString = "Lucky"
+            :?string.Equals(namePart, "experience")
+              buffDisplayString = "+XP"
+            :?string.Equals(namePart, "strength")
+              buffDisplayString = "Strength"
+            :?string.Equals(namePart, "invisibility")
+              buffDisplayString = "Invis"
+            :?string.Equals(namePart, "buff")
+              buffDisplayString = "DmgBuff"
+            :?string.Equals(namePart, "duration")
+              buffDisplayString = "DmgDown"
+            :?string.Equals(namePart, "dot")
+              buffDisplayString = "DoT"
+            :?string.Equals(namePart, "chill")
+              buffDisplayString = "Chill"
+            :?string.Equals(namePart, "fatigue")
+              buffDisplayString = "ArmDown"
+            :?string.Equals(namePart, "feeble")
+              buffDisplayString = "Feeble"
+            :?string.Equals(namePart, "smite")
+              buffDisplayString = "Smite"
+            :?string.Equals(namePart, "stun")
+              buffDisplayString = "Stun"
+            :?string.Equals(namePart, "ignition")
+              buffDisplayString = "Ignite"
+            :?string.Equals(namePart, "poena")
+              buffDisplayString = "REFLECT"
       ?buffDisplayString ! false
         ?buffDisplayString = true
           buffDisplayString = shortenBuffString(buffStr) + " (" + buffStr + ")"
@@ -205,11 +213,43 @@ func parseBuffString(buffString)
     return ""
   return fullDisplayString
   
-var ignoreKeywords = ["machine", "humanoid", "slow", "elemental", "unpushable", "boss", "serpent", "cult", "melee"]
-var replaceKeywordKeys = ["phase1", "phase2", "phase3", "immune_to_stun", "immune_to_debuff_chill", "magic_resist", "immune_to_physical", "magic_vulnerability", "poison", "fire", "ice", "aether", "vigor", "explode"]
-var replaceKeywordVals = ["P1", "P2", "P3", "IMM:Stun", "IMM:Chill", "RES:Magic", "IMM:Phys", "WEAK:Magic", "[∞]", "[φ]", "[❄]", "[*]", "[♥]", "!BOMB!"]
-var coloredKeywordVals = ["P1", "P2", "P3", "IMM:Stun", "IMM:Chill", "RES:Magic", "IMM:Phys", "WEAK:Magic", "[∞]", "[φ]", "[❄]", "[*]", "[♥]", "!BOMB!"]
-var coloredKeywordColors = ["#997700", "#CCAA00", "#FFDD00", "#CCCCCC", "#CCCCFF", "#FF99DD", "#FF9999", "#FF88FF", "#009900", "#FFCC00", "#00FFFF", "#990099", "#FFDDDD", "#FFCC00"]
+>`0,4,#00FFFF,→↓∆∞≈│║▀█░▒▓▲▼○☼♀♂♠♣♥♦♪♫¦§©«®°²³¶¹»¼½¾
+>`0,5,#00FFFF,×Ø÷øʘΘΔψДФХфЖжд‖†‡•⁞±¤…ΦГ ‒ – — ―≠
+  
+var ignoreKeywords = [
+^  "machine", "humanoid", "slow", "elemental", "insect", "arachnid",
+^  "unpushable", "boss", "serpent", "cult",
+^  "melee"
+^]
+
+var elementKeywords = ["poison", "fire", "ice", "aether", "vigor"]
+var elementSymbols = ["∞", "φ", "❄", "*", "♥"]
+var elementColors = ["#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA"]
+
+var replaceKeywordKeys = [
+^  "phase1", "phase2", "phase3",
+^  "explode", "ranged",
+^  "immune_to_stun", "immune_to_debuff_chill", "immune_to_debuff_damage",
+^  "immune_to_physical", "immune_to_poison", "immune_to_fire", "immune_to_ice", "immune_to_aether", "immune_to_vigor",
+^  "magic_resist", "magic_vulnerability",
+^  "adaptive_defense_poison", "adaptive_defense_fire", "adaptive_defense_ice", "adaptive_defense_aether", "adaptive_defense_vigor"
+^]
+var replaceKeywordVals = [
+^  "¶¹", "¶²", "¶³",
+^  "Ж", "«{",
+^  "║¤↓║", "║❄↓║", "║∞↓║",
+^  "║P║", "║∞║", "║φ║", "║❄║", "║*║", "║♥║",
+^  "¦M¦", ">M<",
+^  "⁞∞⁞", "⁞φ⁞", "⁞❄⁞", "⁞*⁞", "⁞♥⁞"
+^]
+var coloredKeywordColors = [
+^  color.Lerp("#FFDD00", "#000000", 0.5), color.Lerp("#FFDD00", "#000000", 0.25), "#FFDD00",
+^  "#FF0000", "#FFFF00",
+^  "#FFFFFF", "#CCCCFF", "#007700",
+^  "#FF0000", "#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA",
+^  "#9900FF", "#AA66FF",
+^  "#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA" 
+^]
 
 func displayColoredStrings(lineNum, strings, colors, xStart, isTight)
   var xPos = xStart
@@ -224,48 +264,35 @@ func displayColoredStrings(lineNum, strings, colors, xStart, isTight)
       thisLength++
     >`@xPos@,@lineNum@,@thisColor@,@thisString@
     xPos += thisLength
-
-func getDistanceColor(dist)
-  var colorAtScreen = "#000000"
-  var colorAtRanged = "#00FF00"
-  var colorAtMedium = "#FFFF00"
-  var colorAtClose = "#FF9900"
-  var colorAtMelee = "#FF0000"
-  var startColor
-  var endColor
-  var midColor
-  var startDist = 1.1
-  var endDist = 1.1
-  var curDist = 1.1
-  var distSpan = 0.1
-  var distRatio = 0.25
+    
+func getDistanceStrings()
   ?U.isFarAs("screen")
-    return colorAtScreen
+    return ["     ", ""]
   :?U.isCloseAs("melee")
-    return colorAtMelee
+    return ["█████","█████"]
   :?U.isWithin("ranged", "screen")
-    startDist = U.getDistOf("screen") * 1.0
-    endDist = U.getDistOf("ranged") * 1.0
-    startColor = colorAtScreen
-    endColor = colorAtRanged
+    return ["█▒░░░","░░░▒█"]
   :?U.isWithin("medium", "ranged")
-    startDist = U.getDistOf("ranged") * 1.0
-    endDist = U.getDistOf("medium") * 1.0
-    startColor = colorAtRanged
-    endColor = colorAtMedium
+    return ["██▒░░","░░▒██"]
   :?U.isWithin("close", "medium")
-    startDist = U.getDistOf("medium") * 1.0
-    endDist = U.getDistOf("close") * 1.0
-    startColor = colorAtMedium
-    endColor = colorAtClose
+    return ["███▒░","░▒███"]
   :?U.isWithin("melee", "close")
-    startDist = U.getDistOf("close") * 1.0
-    endDist = U.getDistOf("melee") * 1.0
-    startColor = colorAtClose
-    endColor = colorAtMelee
-  :
+    return ["████▒","▒████"]
+    
+func getDistanceColor()
+  ?U.isFarAs("screen")
     return "#000000"
-  return color.Lerp(startColor, endColor, distRatio)
+  :?U.isCloseAs("melee")
+    return "#FF0000"
+  :?U.isWithin("ranged", "screen")
+    return "#000099"
+  :?U.isWithin("medium", "ranged")
+    return "#990099"
+  :?U.isWithin("close", "medium")
+    return "#999900"
+  :?U.isWithin("melee", "close")
+    return "#FF9900"
+
 
 func displayFoe(startLine, xStart)
   var foeName = string.ToUpper(foe.name)
@@ -273,46 +300,57 @@ func displayFoe(startLine, xStart)
   var nameLength = String.Size(foe.name)
   var foeSuffix = String.Sub(foe, nameIndex + nameLength)
   var foeKeywords = String.Split(foeSuffix, true)
-  var numRows = Math.CeilToInt(foeKeywords.Count() / 2)  
-  displayColoredStrings(startLine, [
-  ^   " " + U.Pad(foe.distance, 3),
-  ^   foeName,
-  ^   U.Romanize(foe.level)
-  ^ ], [
-  ^   getDistanceColor(foe.distance),
-  ^   "#FF5500",
-  ^   "#FFFF00"
-  ^ ],
-  ^ xStart,
-  ^ false
-  ^)
-  var xOffset = 4
-  xOffset = 4
-  var keywordPalette = ["#990000", "#770000", "#FFFFFF"]
-  var paletteIndex = 0
+  var numRows = Math.CeilToInt(foeKeywords.Count() / 2)
+  var distanceStrings = getDistanceStrings()
+  var distanceColor = getDistanceColor()
+  ?Type(distanceStrings) = Type([])
+    displayColoredStrings(startLine, [
+    ^   distanceStrings[0],
+    ^   foeName,
+    ^   distanceStrings[1]
+    ^ ], [
+    ^   color.Lerp("#000000",distanceColor,0.5),
+    ^   distanceColor,
+    ^   color.Lerp("#000000",distanceColor,0.5)
+    ^ ],
+    ^ xStart,
+    ^ true
+    ^)
+  var xOffset = 0
+  xOffset = 0
+  var keywordPalette = ["#990000", "#770000", "#333333"]
+  var paletteIndex
+  paletteIndex = 0
   var keywordStrings = []
+  keywordStrings.Clear()
   var keywordColors = []
+  keywordColors.Clear()
+  var keyword
+  var parsedKeyword
+  var thisColorString
   for i = 0 .. foeKeywords.Count()-1
-    var keyword = string.ToLower(foeKeywords[i])
+    keyword = string.ToLower(foeKeywords[i])
+    parsedKeyword = keyword
     ?!ignoreKeywords.Contains(keyword)
       ?replaceKeywordKeys.Contains(keyword)
-        keyword = replaceKeywordVals[replaceKeywordKeys.IndexOf(keyword)]
-      ?keywordStrings.Count() > 0
-        keywordStrings.Add("/")
-        keywordColors.Add(keywordPalette[2])
-      keywordStrings.Add(string.Capitalize(keyword))
-	  ?coloredKeywordVals.Contains(keyword)
-	    keywordColors.Add(coloredKeywordColors[coloredKeywordVals.IndexOf(keyword)])
-      keywordColors.Add(keywordPalette[paletteIndex])
-      ?paletteIndex = 0
-        paletteIndex = 1
+        parsedKeyword = replaceKeywordVals[replaceKeywordKeys.IndexOf(keyword)]
+        thisColorString = coloredKeywordColors[replaceKeywordKeys.IndexOf(keyword)]
+      :?elementKeywords.Contains(keyword)
+        parsedKeyword = "[" + elementSymbols[elementKeywords.IndexOf(keyword)] + "]"
+        thisColorString = elementColors[elementKeywords.IndexOf(keyword)]
       :
-        paletteIndex = 0
-      ?keywordStrings.Count() = 7
-        startLine++
-        displayColoredStrings(startLine, keywordStrings, keywordColors, xOffset, true)
-        keywordStrings.Clear()
-        keywordColors.Clear()
+        thisColorString = keywordPalette[paletteIndex]
+        ?paletteIndex = 0
+          paletteIndex = 1
+        :
+          paletteIndex = 0
+
+      ?keywordStrings.Count() > 0
+        keywordStrings.Add("•")
+        keywordColors.Add(keywordPalette[2])
+
+      keywordStrings.Add(string.Capitalize(parsedKeyword))
+      keywordColors.Add(thisColorString)
   ?keywordStrings.Count() > 0
     startLine++
     displayColoredStrings(startLine, keywordStrings, keywordColors, xOffset, true)
@@ -398,6 +436,11 @@ func Display()
     >`25,0,#FF0000,@U.Get("errorMessage")@
   ?U.Get("majorDamageAlert")
     printRight(3,"#FFAAAA",U.Get("majorDamageAlert"),0)
+    
+  ?Type(U.Get("mindFreeze")) = int
+    >`25,3,#00FFFF,mFreeze: @U.Get("mindFreeze")@ (@Type(U.Get("mindFreeze"))@) = @totalTime - U.Get("mindFreeze")@
+
+
     
   ?U.Get("hideHUD")
     printRight(0,"#FF0000","[Z] HUD", 0)
@@ -545,3 +588,4 @@ func Display()
     >`0,24,#FFFF00,@lastCall@
     callsString = string.Join(".", callsArray)
     >`0,25,#FFFF00,@callsString@
+    

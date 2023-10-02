@@ -60,7 +60,7 @@ var rangedOverride = "repeating crossbow"       // Ranged Weapon to equip when [
 var nonMagicRangedOverride = rangedOverride
 
 // ---- DEFAULT EQUIPMENT ----
-var mainWeapon = "big aether sword U"           // Name of default main melee weapon
+var mainWeapon = "stone sword +6"               // Name of default main melee weapon
 var mainShield = strongArmorShield              // Name of default main shield
 var mainRanged = "repeating crossbow"           // Name of default main ranged weapon
 
@@ -75,11 +75,11 @@ var elemWeapons = [  // Names of melee weapons used to take advantage of element
 ]
 
 var elemOffHand = [  // Name of second one-handed melee weapon, for double-wielding against elemental bosses. Set to 'false' if no second weapon.
-^false,                // BASE
-^false,                // POISON (vs. Vigor)
-^false,                // VIGOR (vs. Aether)
-^false,                // AETHER (vs. Fire)
-^false,                // FIRE (vs. Ice)
+^"stone sword +4",     // BASE
+^"stone sword +4",     // POISON (vs. Vigor)
+^"stone sword +4",     // VIGOR (vs. Aether)
+^"stone sword +4",     // AETHER (vs. Fire)
+^"stone sword +4",     // FIRE (vs. Ice)
 ^"ice sword +10 D"     // ICE (vs. Poison)
 ] 
 
@@ -174,32 +174,46 @@ var maskDebuffThreshold =   // When boss' (hp + armor) is LOWER than this multip
 
 // =============================================== WEAPON GETTERS ==============
 func getMainWeapon()
-  ?splashMeleeWeapon & foe.count > splashThreshold & U.isCloseAs("melee")
+  ?U.getBuffCount("smite") > 0 & U.getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill
+    ?iceWandBossA
+      return iceWandBossA
+    ?iceWandA
+      return iceWandA
+    ?debuffChillWeapon
+      return debuffChillWeapon
+  ?splashMeleeWeapon & foe.count >= splashThreshold & U.isCloseAs("melee")
     return splashMeleeWeapon    
   ?antiArmorMeleeWeapon & foe.armor > foeArmorThreshold & U.isCloseAs("melee")
     return antiArmorMeleeWeapon
-  ?U.getCounterElement()
+  ?U.getCounterElement() & foe ! "immune_to_" + U.getCounterElement() & elemWeapons[U.counterElements.IndexOf(U.getCounterElement())]
     return elemWeapons[U.counterElements.IndexOf(U.getCounterElement())]
-  ?foe = boss
-    return debuffChillWeapon
+  ?elemWeapons[0]
+    return elemWeapons[0]
   return mainWeapon
 
 func getMainOffhandWeapon()
-  ?foe.state > 0 & U.getCounterElement() & elemOffHand[U.counterElements.IndexOf(U.getCounterElement())]
-    return elemOffHand[U.counterElements.IndexOf(U.getCounterElement())]
+  ?foe.state > 1
+    ?U.getCounterElement() & foe ! "immune_to_" + U.getCounterElement() & elemOffHand[U.counterElements.IndexOf(U.getCounterElement())]
+      return elemOffHand[U.counterElements.IndexOf(U.getCounterElement())]
+    ?U.getBuffCount("smite") > 0 & U.getFoeDebuffCount("chill") < 6
+      ?iceWandBossA
+        return iceWandBossA
+      ?iceWandA
+        return iceWandA
+    return elemOffHand[0]
   return false
 
 func getMainShield()
   ?fastArmorShield & armor < fastArmorShieldMax
     return fastArmorShield
-  ?U.getCounterElement()
+  ?U.getCounterElement() & elemShields[U.counterElements.IndexOf(U.getCounterElement())]
     return elemShields[U.counterElements.IndexOf(U.getCounterElement())]
   return mainShield
   
 func getMainRanged()
   ?U.Get("preferMelee") & foe ! explode & foe ! bolesh & foe ! bronze_guardian & foe ! yeti
     return getMainWeapon()
-  ?U.getCounterElement() & (foe.hp + foe.armor) > 200
+  ?U.getCounterElement() & foe ! "immune_to_" + U.getCounterElement() & (foe.hp + foe.armor) > 200 & elemRanged[U.counterElements.IndexOf(U.getCounterElement())]
     return elemRanged[U.counterElements.IndexOf(U.getCounterElement())]
   return mainRanged
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -298,6 +312,7 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
 
 // ================================================ QUARTERSTAFF JUMP CHECK ====
 ?U.Get("staffSpeed") & !U.Get("dashFreeze")
+ ^ & (U.Get("isSpeedRunning") | (U.isFarAs("screen") | U.getEndurance() = 1))
  ^ & item.GetCooldown("quarterstaff") <= 0
  ^ & (foe ! bronze_guardian | U.isInState(33, 10))
  ^ & item.CanActivate()
@@ -334,7 +349,7 @@ U.Set("dashFreeze", false)
    ^| foe = immune_to_physical
    ^| (
    ^    U.isFarAs("close")
-   ^    & !U.Get("preferMelee")
+   ^    & (!U.Get("preferMelee") | U.getEndurance() < 1 | (U.getBuffCount("smite") > 0 & foe.count >= splashThreshold))
    ^    & foe ! wall
    ^    & foe ! pillar
    ^  )
@@ -487,8 +502,11 @@ U.Set("dashFreeze", false)
     :?foe = yeti
       ?U.isInState(32, 1)
         activate potion
-	:foe.state > 1
-	  activate potion
+    :?foe = dysangelos
+      ?U.isInState(32, 1)
+        activate potion
+    :?foe.state > 1
+      activate potion
 
   // --- [BOSS] Special Weapon Check ---
   ?foe = nagaraja
@@ -515,14 +533,13 @@ U.Set("dashFreeze", false)
   
   // --- [BOSS] Dodge Check ---
   ?item.GetCooldown("mind") <= 0
-  ^& (
-  ^    foe = bronze_guardian & U.isInState(32, 10)
-  ^  | foe = nagaraja & U.isInState(112, 53)
-  ^  | foe = dysangelos & foe = phase1 & U.isInState(33, 0)
-  ^  | foe = dysangelos & foe = phase3 & U.isInState(115, 60)
-  ^  | foe = pallas & foe = phase1 & U.isInState(32, 60)
-  ^)
-    U.Dodge()
+    ?foe = dysangelos & foe = phase1 & U.isInState(33, 0)
+    ^| foe = pallas & foe = phase1 & U.isInState(32, 60)
+      U.Dodge(false)
+    ?foe = dysangelos & foe = phase3 & U.isInState(115, 60)
+    ^| foe = nagaraja & U.isInState(112, 53)
+    ^| foe = bronze_guardian & U.isInState(32, 10)
+      U.Dodge(true)
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // =============================================================================
@@ -555,7 +572,7 @@ U.Set("dashFreeze", false)
   ^& U.getEndurance() < 0.75
   ^& !U.Get("isSpeedRunning")
   ^& U.isCloseAs("close")
-    U.Dodge()
+    U.Dodge(true)
 
   // --- [NON-BOSS (sorta)] Temple Acronian Miniboss Check ---
   ?foe = acronian & loc = temple
@@ -564,15 +581,17 @@ U.Set("dashFreeze", false)
     ?item.GetCooldown("mind") <= 0
     ^& armor < foe.damage
     ^& U.isInState(32, 6)
-      U.Dodge()
+      U.Dodge(false)
 
   // --- [NON-BOSS (sorta)] Bomb Cart Miniboss Check ---
   ?foe = bomb cart
     ?foe.distance < 7
-      U.Dodge()
-      equip mind
+      U.Dodge(false)
+//      equip mind
     :?U.isInRange(11, 15)
-      equipR dash
+      U.AssignRight(U.canDash(), 3.9, ">> DASH >>")
+
+//      equipR dash
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ============================== FINAL OVERRIDING CHECKS ======================
@@ -609,6 +628,5 @@ U.ActivateItem()
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ======================================= HUD DISPLAY =========================
-?loc.begin | totalTime % 30 = 0
-  HUD.Display()
+HUD.Display()
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _

@@ -132,13 +132,15 @@ func Init()
   ?!Has("isActivating")
     Set("isActivating", false)
   ?!Has("mindFreeze")
-    Set("mindFreeze", 0)
+    Set("mindFreeze", false)
   ?!Has("dashFreeze")
     Set("dashFreeze", false)
   ?!Has("isFacingBombCart")
     Set("isFacingBombCart", false)
   ?!Has("errorMessage")
     Set("errorMessage", false)
+  ?!Has("potionActivationReason")
+    Set("potionActivationReason", "")
   ?loc = hotspring | loc = gate
     Set("hideHUD", true)
     Set("staffSpeed", false)
@@ -292,8 +294,6 @@ func AssignLeft(item, priority, reason)
     AssignBoth(item, priority, reason)
   :?Get("leftPriority") <= priority & Get("bothPriority") <= priority
     Set("assignedLeft", item)
-    ?item = mind
-      Set("mindFreeze", time)
     Set("leftReason", priority + ": " + reason)
     Set("leftPriority", priority)
 
@@ -394,9 +394,10 @@ func isInRange(min, max)
 func isInState(stateNum, stateTime)
   return foe.state = stateNum & foe.time >= stateTime
 
-func Dodge()
+func Dodge(isFreezingDash)
   AssignBoth("mind", 3.8, "<< DODGE <<")
-  equip mind
+  ?isFreezingDash
+    Set("mindFreeze", totalTime + 60)
 
 func getEndurance()
   var percentFloat = 0.01
@@ -419,10 +420,11 @@ func canDash()
   ?Get("dashFreeze")
     return false
 
-  ?Get("mindFreeze") = 0 | (time - Get("mindFreeze")) > 30
-    Set("mindFreeze", 0)
-  :
-    return false
+  ?Type(Get("mindFreeze")) = int
+    ?totalTime > Get("mindFreeze")
+      Set("mindFreeze", false)
+    :
+      return false
 
   ?foe.count <= 2 & isInRange(11, 15)
    return getDashShield()
@@ -560,7 +562,7 @@ func getHealingPotion()
     return "vampiric"
 
 func getOffensivePotion()
-  ?loc = boiling & res.stone >= 20zz
+  ?loc = boiling & res.stone >= 20
     return "strength"
   return "berserk"
     
