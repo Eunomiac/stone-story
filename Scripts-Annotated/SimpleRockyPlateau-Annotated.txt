@@ -175,13 +175,13 @@ func EquipAndActivate()
         ?potionType = healing & hp < 0.5 * maxhp
           activate potion
         // .. use an offensive potion as soon as Dysangelos finishes his intro animation.
-        :?potionType = offensive & foe.state > 1
+        :?potionType = offensive & foe.state = 32
           activate potion
         // .. use an armor-busting potion when Dysangelos takes on his armored form in phase 3.
-        :?potionType = armor foe = phase3 & foe.armor > 0
+        :?potionType = armor & foe = phase3 & foe.armor > 0
           activate potion
         // .. use a defensive potion when Dysangelos is about to use his big phase 3 attack.
-        :?potionType = defensive foe = phase3 & foe.state = 115
+        :?potionType = defensive & foe = phase3 & foe.state = 115
           activate potion
     
       // Dysangelos regularly changes the elements he's weak to, and he can also buff himself with
