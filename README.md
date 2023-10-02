@@ -17,7 +17,7 @@ As this is an evolution of my script as I played through Stone Story, it was ini
 > [!WARNING]
 > Be sure to break apart all unwanted zero-star items in your inventory before using this script, or the script may erroneously equip something it shouldn't!
 
-Please post an Issue if you see any errors (such as "`no <X> to equip"`) while running the script without all of the above items.
+Please post an Issue if you see any errors (such as "`no <X> to equip"`) while running the script. Please include the line number and file (i.e. `Main`, `HUD` or `Utilities`) displayed by the in-game error message.
 
 ## Usage (PC)
 1. Download all three files (`Main.txt`, `Utilities.txt` and `HUD.txt`)
