@@ -13,8 +13,9 @@ var dmgDebuffThreshold = 7           // Total damage debuff on yourself before s
 var splashThreshold = 3              // Total number of foes needed to trigger use of splashing weapons
 var foeArmorThreshold = 50           // If foe's armor exceeds this, switch to armor-penetrating weapon
 var fastArmorShieldMax = 14          // Max armor of "fast armor"-enchanted shield, if you have one ('fastArmorShield', below)
+var maxPickPocketBuffs = 3           // Max number of pick-pocket buffs you can have (see Skeleton Arm)
 var maxOverAvgToExitMult = 1.15      // If, during a speed run ('S' hotkey toggle), your current time exceeds your average time
-                                     //   by more than this multiplier, you'll auto-exit the stage (to prevent your average
+                                     //   multiplied by this number, you'll auto-exit the stage (to prevent your average
                                      //   taking a hit).  Set to 0 to disable.
 var devourFireRuneThreshold = 3      // The number of ignition stacks on an enemy required to trigger Cinderwisp's devour.
                                      //   Set to 0 to never trigger devour.
@@ -43,6 +44,10 @@ var iceWandBossA = "ice wand 1* +11"            // Name of first low-star speed-
 var iceWandBossB = "ice wand 1* +10"            // Name of second low-star speed-enchanted chill wand for smite combo vs. bosses
 var stoneHammerA = "stone hammer +10"           // Name of first stun-enchanted stone hammer for stun-locking
 var stoneHammerB = "stone hammer +6"            // Name of second stun-enchanted stone hammer for stun-locking
+
+// ---- QUEST FLAGS ----
+// Toggle these on to activate special script logic related to satisfying certain quest objectives.
+var isOnPPKillQuest = false                     // When true, Skeleton Arm will only activate when it can kill its target.
 
 // ---- HOTKEY OVERRIDES ----
 
@@ -98,14 +103,14 @@ var elemShields = [  // Names of shields used to take advantage of elemental wea
 
 // ---- POTIONS ----
 var locPotions = [ // *U.getHealingPotion: Gets healing potion for which you have the most ingredients, favoring defensive->vampiric->cleansing->healing
-^U.getHealingPotion(), // Rocky Plateau 
-^U.getHealingPotion(), // Deadwood Canyon
-^U.getHealingPotion(), // Caves of Fear
-^U.getHealingPotion(), // Mushroom Forest
-^U.getHealingPotion(), // Haunted Halls
-^"strength",            // Boiling Mine
-^"berserk",            // Icy Ridge
-^"berserk"             // Temple
+^U.getHealingPotion(),     // Rocky Plateau 
+^U.getHealingPotion(),     // Deadwood Canyon
+^U.getHealingPotion(),     // Caves of Fear
+^U.getHealingPotion(),     // Mushroom Forest
+^U.getHealingPotion(),     // Haunted Halls
+^U.getOffensivePotion(),   // Boiling Mine
+^U.getOffensivePotion(),   // Icy Ridge
+^U.getOffensivePotion()    // Temple
 ]
 
 var forcedPotions = [ // If one of these potions is brewed at start of run, do not override it
@@ -192,8 +197,6 @@ func getMainShield()
   return mainShield
   
 func getMainRanged()
-  ?U.Get("rangedFreeze")
-    return getMainWeapon()
   ?U.Get("preferMelee") & foe ! explode & foe ! bolesh & foe ! bronze_guardian & foe ! yeti
     return getMainWeapon()
   ?U.getCounterElement() & (foe.hp + foe.armor) > 200
@@ -294,13 +297,13 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ QUARTERSTAFF JUMP CHECK ====
-?U.Get("staffSpeed") & !U.Get("dashFreeze") & !U.Get("staffFreeze")
+?U.Get("staffSpeed") & !U.Get("dashFreeze")
  ^ & item.GetCooldown("quarterstaff") <= 0
  ^ & (foe ! bronze_guardian | U.isInState(33, 10))
  ^ & item.CanActivate()
  ^ & (foe ! explode | foe ! bomb cart)
   U.AssignBoth("quarterstaff", 20, "@@@ JUMP! @@@")
-  U.AssignActivate("Staff")
+  U.AssignActivate("quarterstaff")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ RANGED WEAPON CHECK ========
@@ -362,11 +365,11 @@ U.Set("dashFreeze", false)
 // ================================================ HARVEST CHECK ==============
 ?!U.Get("staffSpeed") & harvest.distance < 9
   ?harvest = Boulder
-    U.AssignRight("shovel", 2, "Harvest Boulder")
+    U.AssignBoth("shovel", 2, "Harvest Boulder")
   :
     ?item.GetCooldown("hatchet") <= 0 & harvest.distance <= 4
       U.AssignRight("hatchet", 2, "@@@ HARVEST @@@")
-      U.AssignActivate("Hatchet")
+      U.AssignActivate("hatchet")
     :
       U.AssignRight("hatchet", 2, "Harvest Tree")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -377,20 +380,20 @@ U.Set("dashFreeze", false)
 ^& U.isCloseAs("melee")
 ^& item.GetCooldown("bardiche") <= 0 & item.CanActivate()
   U.AssignBoth("bardiche", 20, "@@@ BARDICHE @@@")
-  U.AssignActivate("Bardiche")
+  U.AssignActivate("bardiche")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // =========================================== BLADE OF THE FALLEN GOD CHECK ===
 ?item.GetCooldown("blade") <= 0 & item.canActivate()
   ?U.Get("isForcingBotFG")
     U.AssignBoth("blade of the fallen god", 4, "@X@ SMITE @X@")
-    U.AssignActivate("Blade")
+    U.AssignActivate("blade of the fallen god")
   :?U.isCloseAs("ranged")
    ^& foe.count > smiteThreshold
    ^& foe ! spawner
    ^& (U.isAtLeastSecsLeft(120) | U.isLessThanSecsLeft(100))
     U.AssignBoth("blade of the fallen god", 3, "@@@ SMITE @@@")
-    U.AssignActivate("Blade")
+    U.AssignActivate("blade of the fallen god")
   
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -400,7 +403,7 @@ U.Set("dashFreeze", false)
 ^& U.isFarAs("medium")
 ^& foe ! poena
   U.AssignRight("talis", 20, "@@@ SUMMON @@@")
-  U.AssignActivate("Talisman")
+  U.AssignActivate("talis")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // =============================================================================
@@ -409,7 +412,7 @@ U.Set("dashFreeze", false)
 ?U.isFacingBoss()
 
   // --- ［BOSS］ Potion Check, More-Aggressive Heal Check ---
-  ?buffs.string ! berserk
+  ?buffs.string ! berserk & buffs.string ! lucky & buffs.string ! strength
     ?item.potion = cleansing
     ^& debuffs.count > 15
       activate potion
@@ -440,7 +443,7 @@ U.Set("dashFreeze", false)
   ?foe.armor > 0 & U.isCloseAs("melee")
     ?item.GetCooldown("hammer") <= 0 & item.CanActivate()
       U.AssignBoth("heavy hammer", 20, "@@@ ARMOR @@@")
-      U.AssignActivate("Hammer")
+      U.AssignActivate("heavy hammer")
     :
       U.AssignBoth("heavy hammer", 2, "vs. Armor")
 
@@ -465,28 +468,27 @@ U.Set("dashFreeze", false)
     U.AssignLeft(debuffChillWeapon, 3, "@-Chill-" + U.getFoeDebuffCount("chill") + "-@")
   :?U.isDebuffing(1, "armor")
     U.AssignBoth("heavy hammer", 20, "@@@ ARMOR @@@")
-    U.AssignActivate("Hammer")
+    U.AssignActivate("heavy hammer")
   :?U.isDebuffing(debuffFeebleThreshold, "feeble")
     U.AssignRight("cultist mask", 20, "@@@ ENFEEBLE @@@")
-    U.AssignActivate("Mask")
+    U.AssignActivate("cultist mask")
 
   // --- [BOSS] Offensive Potion Check ---
-  ?foe = bronze_guardian
-  ^& U.isInState(33, 30)
-  ^& (item.potion = strength | item.potion = berserk)
-    activate potion
-  :?foe = nagaraja
-  ^& U.isCloseAs("melee")
-  ^& item.potion = berserk
-    activate potion
-  :?foe = bolesh
-  ^& U.isInState(999, 5)
-  ^& item.potion = berserk
-    activate potion
-  :?foe = yeti
-  ^& U.isInState(32, 1)
-  ^& item.potion = berserk 
-    activate potion
+  ?U.isOffensivePotion(item.potion)
+    ?foe = bronze_guardian
+      ?U.isInState(33, 30)
+        activate potion
+    :?foe = nagaraja
+      ?U.isCloseAs("melee")
+        activate potion
+    :?foe = bolesh
+      ?item.CanActivate()
+        activate potion
+    :?foe = yeti
+      ?U.isInState(32, 1)
+        activate potion
+	:foe.state > 1
+	  activate potion
 
   // --- [BOSS] Special Weapon Check ---
   ?foe = nagaraja
@@ -534,15 +536,15 @@ U.Set("dashFreeze", false)
   ^& U.isShortOfBestTimeBy(90)
     activate cinderwisp
     
-  // --- [NON-BOSS] PICK-POCKET CHECK ---
+  // --- [NON-BOSS] Pick-Pocket Check ---
   ?U.Get("skeletonArm") & item.GetCooldown("skeleton_arm") <= 0
-    U.AssignBoth("skeleton", 2, "@-Debuff-PPocket-@")
-    ?buffs.string = pick_pocket
+    U.AssignBoth("skeleton", 3.2, "@-Debuff-PPocket-@")
+    ?U.getBuffCount("pick_pocket") >= maxPickPocketBuffs
     ^& item.CanActivate()
-    ^& U.isCloseAs("close")
-    ^& (foe.armor + foe.hp) <= 10
+    ^& foe.distance <= 7
+    ^& (!isOnPPKillQuest | (foe.armor + foe.hp) <= 10 & foe.hp > 0)
       U.AssignBoth("skeleton", 3.5, "@@@ PICKPOCKET @@@")
-      U.AssignActivate("Skeleton Arm")
+      U.AssignActivate("skeleton")
 
   // --- [NON-BOSS] Ice Pillar Check ---
   ?(foe = ice pillar | foe = ice wall) & U.isCloseAs("ranged") & icePillarWeapon
@@ -551,12 +553,12 @@ U.Set("dashFreeze", false)
   // --- [NON-BOSS] Evade-for-Range Check ---
   ?item.GetCooldown("mind") <= 0 
   ^& U.getEndurance() < 0.75
-  ^& !U.get("isSpeedRunning")
+  ^& !U.Get("isSpeedRunning")
   ^& U.isCloseAs("close")
     U.Dodge()
 
-  // --- [NON-BOSS (sorta)] Acronian Miniboss Check ---
-  ?foe = acronian
+  // --- [NON-BOSS (sorta)] Temple Acronian Miniboss Check ---
+  ?foe = acronian & loc = temple
     U.AssignLeft(getMainWeapon(), 2, "!! Acro Left !!")
     U.AssignRight(getMainOffhandWeapon(), 2, "!! Acro Right !!")
     ?item.GetCooldown("mind") <= 0
@@ -564,7 +566,7 @@ U.Set("dashFreeze", false)
     ^& U.isInState(32, 6)
       U.Dodge()
 
-  // --- Bomb Cart Miniboss Check ---
+  // --- [NON-BOSS (sorta)] Bomb Cart Miniboss Check ---
   ?foe = bomb cart
     ?foe.distance < 7
       U.Dodge()
@@ -607,5 +609,6 @@ U.ActivateItem()
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ======================================= HUD DISPLAY =========================
-HUD.Display()
+?loc.begin | totalTime % 30 = 0
+  HUD.Display()
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
