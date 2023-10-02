@@ -17,10 +17,25 @@ var locElems = ["none",  "none", "poison", "vigor", "aether", "fire", "ice", "po
 var elements = ["none", "vigor", "aether", "fire", "ice", "poison"]
 var counterElements = ["none", "poison", "vigor",  "aether", "fire", "ice"]
 var healingPotions = ["defensive", "vampiric", "cleansing", "healing"]
+var offensivePotions = ["strength", "lightning", "berserk", "lucky"]
+var defensivePotions = ["invisibility", "cleansing", "defensive"]
+var utilityPotions = ["experience"]
 
 func isHealingPotion(item)
   for i = 0..(healingPotions.Count() - 1)
     ?item = healingPotions[i]
+      return true
+  return false
+
+func isOffensivePotion(item)
+  for i = 0..(offensivePotions.Count() - 1)
+    ?item = offensivePotions[i]
+      return true
+  return false
+
+func isDefensivePotion(item)
+  for i = 0..(defensivePotions.Count() - 1)
+    ?item = defensivePotions[i]
       return true
   return false
 
@@ -133,8 +148,6 @@ func Init()
     Set("isForcingDash", false)
   ?!Has("isDodgingNextFrame")
     Set("isDodgingNextFrame", false)
-  ?!Has("staffFreeze")
-    Set("staffFreeze", false)
   ?!Has("rangedFreeze")
     Set("rangedFreeze", false)
   ?!Has("lastFrameHP")
@@ -161,21 +174,12 @@ func Init()
     Set("dpsWatchAvgDPS", 0)
 
 func Reset(isLocStart)
-  var alertMessage = ""
   Set("errorMessage", false)
   InitLeft()
   InitRight()
   InitBoth()
   Set("isActivating", false)
   Set("isForcingDash", false)
-  ?(Get("lastFrameHP") - hp) > 1
-     alertMessage = (Get("lastFrameHP") - hp) + " Damage Taken at State "
-    ?Get("secondLastFrameState")
-      alertMessage += Get("secondLastFrameState") + ":" + Get("secondLastFrameStateTime") + " > "
-    ?Get("lastFrameState")
-      alertMessage += Get("lastFrameState") + ":" + Get("lastFrameStateTime") + " > "
-    alertMessage += foe.state + ":" + foe.time
-    Set("majorDamageAlert", alertMessage)
   Set("lastFrameHP", hp)
   ?Get("lastFrameState")
     Set("secondLastFrameState", Get("lastFrameState"))
@@ -209,12 +213,20 @@ func Reset(isLocStart)
     Set("dpsWatchFoeApH", false)
     Set("dpsWatchSkippedFrames", 0)
     Set("dpsWatchAvgDPS", 0)
-    Set("staffFreeze", false)
     Set("rangedFreeze", false)
     Set("isDodgingNextFrame", false)
 
+func Romanize(num)
+  return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV "][num]
+  
+func Pad(val, length)
+  var stringVal = "             " + val
+  return string.Sub(stringVal, string.Size(stringVal) - length + 1)
+
 func ActivateItem()
-  ?item.CanActivate() & Get("isActivating") ! false
+  ?Get("isActivating")
+  ^ & [Get("assignedLeft"), Get("assignedRight"), Get("assignedBoth")].Contains(Get("isActivating"))
+  ^ & item.CanActivate()
     activate R
   
 func InitLeft()
@@ -297,8 +309,14 @@ func AssignRight(item, priority, reason)
     Set("rightReason", priority + ": " + reason)
     Set("rightPriority", priority)
 
+func isValidActivation(param)
+  return param & [Get("assignedLeft"), Get("assignedRight"), Get("assignedBoth")].Contains(param)
+
 func AssignActivate(param)
-  Set("isActivating", param)
+  var alertNotice
+  alertNotice = ""
+  ?isValidActivation(param)
+    Set("isActivating", param)
   
 func EquipItems()
   ?Get("assignedLeft") ! false
@@ -352,6 +370,9 @@ func getFoeDebuffCount(buffName)
 func getArmor()
   return math.Round((armor * 10) + armor.f) / 10
 
+func getDistOf(range)
+  return xLookup(range, ranges, units)
+ 
 func isCloseAs(range)
   return foe.distance <= xLookup(range, ranges, units)
 
@@ -412,7 +433,7 @@ func canDash()
   return false
   
 func isDebuffing(threshold, debuff)
-  ?buffs.string = berserk
+  ?buffs.string = berserk | buffs.string = lucky | buffs.string = strength
     return false
   ?foe.buffs.string = protection
     return false
@@ -537,6 +558,11 @@ func getHealingPotion()
     return "cleansing"
   :?res.bronze > res.stone & res.bronze > res.wood
     return "vampiric"
+
+func getOffensivePotion()
+  ?loc = boiling & res.stone >= 20zz
+    return "strength"
+  return "berserk"
     
 func brewPotion(potion)
   ?item.potion = potion
@@ -544,7 +570,7 @@ func brewPotion(potion)
   var ingred = xLookup(potion, potions, ingredients)
   ?ingred = "wood + wood"
     brew wood
-  :?ingred = "stone"
+  :?ingred = "stone + stone"
     brew stone
   :?ingred = "tar + tar"
     brew tar
@@ -663,3 +689,17 @@ func UpdateAvgDPS()
     dpsWatchSkippedFrames = 0
     >`0,16,#FF4400,eA: @effectiveAlpha@ DPS: @dpsWatchAvgDPS@
   updateLastFrameApH()
+  
+func displayColoredStrings(lineNum, strings, colors, xStart, isTight)
+  var xPos = xStart
+  var thisColor
+  var thisString
+  var thisLength
+  for i = 0..(strings.Count() - 1)
+    thisColor = colors[i]
+    thisString = strings[i] + ""
+    thisLength = string.Size(thisString)
+    ?!isTight
+      thisLength++
+    >`@xPos@,@lineNum@,@thisColor@,@thisString@
+    xPos += thisLength
