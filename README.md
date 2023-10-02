@@ -44,7 +44,7 @@ The following keyboard controls can be used to change the behavior of the script
 - `[A]` --- Enable/Disable trying to pick off kills with the Skeleton Arm _(to satisfy the quest)_
 - `[C]` --- Enable/Disable forced melee combat & dashing over ranged weapons _(for maximum speed)_
 - `[X]` --- HOLD to force-equip a (configurable) ranged weapon
-- `[D]` --- Immediately trigger a dash by equipping Bash Shield or a Dash Shield
+- `[D]` --- Immediately trigger a dash by equipping a Bashing or Dash Shield
 - `[W]` --- Immediately equip & activate Blade of the Fallen God
 
 # Learning StoneScript
