@@ -1,0 +1,122 @@
+/* ███ Romanize(integer)                                  ███
+   ███    => corresponding Roman numeral                  ███
+   A "mapping function" that takes in a positive integer 
+   no greater than 15 and "maps" it to its Roman equivalent. */
+
+func Romanize(num)
+
+  /* First we define our map: it will "map" the value 'num'
+     to its Roman equivalent.
+       This can be an array, in which each element is the
+     Roman number that corresponds to the element's position
+     ("index") in the array.
+       The first value in any array is at index '0', so we'll
+     map that to a blank string since the Romans didn't have
+     a number for zero. */
+
+  var intToRomanNumberMap = [
+    ^   "",
+    ^    "I", "II", "III", "IV", "V",
+    ^   "VI", "VII", "VIII", "IX", "X",
+    ^   "XI", "XII", "XIII", "XIV", "XV"
+    ^ ]
+
+  /* Next we make sure that 'num' is an index in our map:
+      - It must be an integer
+      - It can't be less than zero
+      - It can't be larger than the size of our map */
+
+  ? Type(num) = int
+  ^ & num >= 0
+  ^ & num < intToRomanNumberMap.Count()
+ 
+    // PASS: Return the Roman number at num's position in the map.
+    
+	return intToRomanNumberMap[num]
+    
+  /* FAIL: 'num' is not an integer we can 'Romanize'.  
+       So we do the next best thing: We return 'num' (which
+     could be anything), but we change its type ("cast"/
+     "coerce" it) to a string.
+       We do this because now we can be sure that this
+     function will always return a string when we use it
+     elsewhere in our code --- we won't have to check its
+     type to avoid causing an error.
+       One way to cast an unknown value to a string in 
+     StoneScript is to concatenate it with another string: */
+
+  return "" + num
+  
+/* === NOTES ===
+   Sometimes, taking steps to avoid errors can be a bad idea,
+   because errors can be helpful by pointing you to mistakes in
+   your code. This is especially true when the error you are
+   preventing (i.e trying to access 'intToRomanNumberMap' with an
+   invalid index number) could hide ("mask") a higher-level
+   error (i.e. passing an invalid value to the 'Romanize' function
+   in the first place).
+     If you want to KNOW whenever your script tries to pass an
+   invalid value to the 'Romanize' function (so you can correct
+   that!), you could skip all of the checks we did and just 
+   'return intToRomanNumberMap[num]' right at the beginning.
+     This will fail (and throw an error) if 'Romanize' is called
+   with a value that isn't an index in our map.
+     This will be our strategy for the next function: It is much
+   broader and can be used in a lot more ways, so we definitely
+   want to know when our code tries to use it incorrectly. */
+   
+/* ███ xLookup(lookupValue, lookupArray, returnArray)     ███
+   ███    => value in returnArray, or false if none found ███
+   'xLookup' ("cross lookup") finds the position of a value
+   in one array, and returns the corresponding value (same
+   position) in a second array.
+     This is a "mapping function", just like Romanize: it "maps"
+   "maps" one value onto another. 'xLookup' is far more versa-
+   tile, though, as it can map anything. */
+
+func xLookup(lookupValue, lookupArray, returnArray)
+  /* First we find the position ("index") of 'lookupValue' in
+     the first array, 'lookupArray'. We do this with the 'IndexOf'
+     method, which is a function baked into every array.
+       Note that we don't check to make sure that 'lookupArray'
+     or 'returnArray' are arrays, so the function will throw
+     an error if they are not. Since we want to know if our code
+     tries to do something silly like send non-arrays where
+     only arrays should be, we want this to throw an error. */
+  
+  var mapIndex = lookupArray.IndexOf(lookupValue)
+  
+  /* 'IndexOf' will return '-1' if it can't find the value in the 
+     array. This makes checking it easy, since a valid index must be
+     an integer greater than -1: */
+
+  ?mapIndex > -1
+
+    // PASS: We return the corresponding value in 'returnArray'.
+    return returnArray[index]
+
+  // FAIL: We return false, which future code can easily check for
+  return false
+	
+/* ██████████████████ UNANNOTATED FUNCTIONS █████████████████
+   All those comments can make the code itself hard to follow.
+       Here are both functions without any comment lines.
+
+func Romanize(num)
+  var intToRomanNumberMap = [
+    ^   "",
+    ^    "I", "II", "III", "IV", "V",
+    ^   "VI", "VII", "VIII", "IX", "X",
+    ^   "XI", "XII", "XIII", "XIV", "XV"
+    ^ ]
+  ? Type(num) = int
+  ^ & num >= 0
+  ^ & num < intToRomanNumberMap.Count()
+	return intToRomanNumberMap[num]
+  return "" + num
+
+func xLookup(lookupValue, lookupArray, returnArray)
+  var mapIndex = lookupArray.IndexOf(lookupValue)
+  ?mapIndex > -1
+    return returnArray[index]
+  return false
