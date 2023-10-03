@@ -32,7 +32,7 @@ func Romanize(num)
  
     // PASS: Return the Roman number at num's position in the map.
     
-	return intToRomanNumberMap[num]
+    return intToRomanNumberMap[num]
     
   /* FAIL: 'num' is not an integer we can 'Romanize'.  
        So we do the next best thing: We return 'num' (which
@@ -71,8 +71,8 @@ func Romanize(num)
    in one array, and returns the corresponding value (same
    position) in a second array.
      This is a "mapping function", just like Romanize: it "maps"
-   "maps" one value onto another. 'xLookup' is far more versa-
-   tile, though, as it can map anything. */
+   one value onto another. 'xLookup' is far more versatile,
+   though, as it can map anything. */
 
 func xLookup(lookupValue, lookupArray, returnArray)
   /* First we find the position ("index") of 'lookupValue' in
@@ -97,10 +97,38 @@ func xLookup(lookupValue, lookupArray, returnArray)
 
   // FAIL: We return false, which future code can easily check for
   return false
-	
+      
+/* ██████████████████████ USAGE EXAMPLES ████████████████████
+   'Romanize' is pretty straight-forward, but here is an example
+   of using the more-powerful 'xLookup' function.
+     Say we want to display on screen the element of the foe
+   we are currently facing, but we want to show the symbol
+   (instead of the word), and we want to give each element a
+   different color. */
+   
+/* We start by defining our maps: A lookupArray for the
+  elements, and then two returnArrays, one for the symbol,
+  and the other for the color. */
+   
+var elementLookup = ["poison", "fire", "ice", "aether", "vigor"]
+var elementSymbolReturn = ["∞", "φ", "❄", "*", "♥"]
+var elementColorReturn = ["#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA"]
+
+/* And that's all we need to set up! Now we can display elements
+  in their proper colors, using 'xLookup' and the standard StoneScript
+  syntax for displaying text on-screen.
+    Let's write a function that will display any element in its proper
+  color, at a specified position on the screen: */
+  the standard StoneScript syntax for displaying text on-screen: */
+
+func printElementAtPos(element, xPos, yPos)
+  var color = xLookup(element, elementLookup, elementColorReturn)
+  var symbol = xLookup(element, elementLookup, elementSymbolReturn)
+  >`@xPos@,@yPos@,@color@,@symbol@
+    
 /* ██████████████████ UNANNOTATED FUNCTIONS █████████████████
    All those comments can make the code itself hard to follow.
-       Here are both functions without any comment lines.
+       Here's the full code without any comment lines.
 
 func Romanize(num)
   var intToRomanNumberMap = [
@@ -112,7 +140,7 @@ func Romanize(num)
   ? Type(num) = int
   ^ & num >= 0
   ^ & num < intToRomanNumberMap.Count()
-	return intToRomanNumberMap[num]
+    return intToRomanNumberMap[num]
   return "" + num
 
 func xLookup(lookupValue, lookupArray, returnArray)
@@ -120,3 +148,12 @@ func xLookup(lookupValue, lookupArray, returnArray)
   ?mapIndex > -1
     return returnArray[index]
   return false
+  
+var elementLookup = ["poison", "fire", "ice", "aether", "vigor"]
+var elementSymbolReturn = ["∞", "φ", "❄", "*", "♥"]
+var elementColorReturn = ["#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA"]
+
+func printElementAtPos(element, xPos, yPos)
+  var color = xLookup(element, elementLookup, elementColorReturn)
+  var symbol = xLookup(element, elementLookup, elementSymbolReturn)
+  >`@xPos@,@yPos@,@color@,@symbol@
