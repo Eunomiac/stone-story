@@ -118,8 +118,8 @@ var elementColorReturn = ["#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA"]
   in their proper colors, using 'xLookup' and the standard StoneScript
   syntax for displaying text on-screen.
     Let's write a function that will display any element in its proper
-  color, at a specified position on the screen: */
-  the standard StoneScript syntax for displaying text on-screen: */
+  color at a specified position, using the standard StoneScript syntax
+  for displaying text on-screen: */
 
 func printElementAtPos(element, xPos, yPos)
   var color = xLookup(element, elementLookup, elementColorReturn)
@@ -128,7 +128,7 @@ func printElementAtPos(element, xPos, yPos)
     
 /* ██████████████████ UNANNOTATED FUNCTIONS █████████████████
    All those comments can make the code itself hard to follow.
-       Here's the full code without any comment lines.
+   Here's the full code without any comment lines.
 
 func Romanize(num)
   var intToRomanNumberMap = [
