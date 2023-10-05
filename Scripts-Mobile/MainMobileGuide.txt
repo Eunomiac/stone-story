@@ -1,4 +1,17 @@
-// ==== CONFIG GUIDE ====
+// ==== CONFIG GUIDE FOR MOBILE USERS ====
+// ---- MOBILE-SPECIFIC SETTINGS ----
+
+var isSpeedRunning = false
+  // Should the script try for the fastest run speeds, even at the risk of taking more damage?
+var preferMelee = false
+  // Should the script ALWAYS try to get close enough to melee, even if you have a viable ranged weapon?
+var isPickPocketingWithSkeletonArm = true
+  // Should the script attempt to Pick Pocket with the Skeleton Arm?
+var isOnPPKillQuest = false
+  // Are you on the Skeleton Arm quest that requires you to kill enemies with the Pick Pocket attack?
+  //   (Note: 'isPickPocketingWithSkeletonArm' must also be true to enable the Skeleton Arm logic)
+
+
 // ---- THRESHOLD VALUES ----
 
 var smiteThreshold = 6
@@ -11,6 +24,12 @@ var foeArmorThreshold = 50
   // If foe's armor exceeds this, switch to armor-penetrating weapon
 var fastArmorShieldMax = 14
   // Max armor of "fast armor"-enchanted shield, if you have one ('fastArmorShield', below)
+var maxPickPocketBuffs = 3
+  // Max number of pick-pocket buffs you can have (see your Skeleton Arm's stats)
+var maxOverAvgToExitMult = 1.15
+  // If, during a speed run ('S' hotkey toggle), your current time exceeds your average time
+  //   multiplied by this number, you'll auto-exit the stage (to prevent your average
+  //   taking a hit).  Set to 0 to disable.
 var devourFireRuneThreshold = 3
   // The number of ignition stacks on an enemy required to trigger Cinderwisp's devour.
   //   Set to 0 to never trigger devour.

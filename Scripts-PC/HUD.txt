@@ -2,9 +2,66 @@ var U = import Utilities
 
 var timeStringColors = ["#00FF00", "#FFFF00", "#FF0000"]
 
-// OK SYMBOLS: →↓∆∞≈│║▀█░▒▓▲▼○☼♀♂♠♣♥♦♪♫¦§©«®°²³¶¹»¼½¾×Ø÷øʘΘΔψДФХфЖжд‖†‡•⁞±¤…ΦГ ‒ – — ―≠
+// OK SYMBOLS: →↓↑←∆∞≈│║▀█░▒▓▲▼○☼♀♂♠♣♥♦♪♫¦§©«»®°¹²³¶½¼¾×Ø÷øʘΘΔψДФХфЖжд‖†‡•⁞±¤…ΦГ ‒ – — ―≠
 // BAD SYMBOLS: ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ▬◊●♡⸨⸩⸿⸫⸪⸬ǁǂȸȹɅɸΓΞϴ҈֎א٭۝۞۩۷۸ฒณᴀᴄᴅᴁᴬᴱᴰᴪᵃᵉᵜ‣※‼‽⁂⁃⁅⁆⁋⁐⁎⁑⁒⁓⁕⁖⁘⁙⁚⁛⁜⁝₁₂₃ₐₑ⁴⁵⁶₊₍₎ℨℾℿ⸿⸫⸬⸭⸪Ψ‐Ɐ↕↨↔√⌂
 // Element Symbols: ∞φ❄*♥
+
+var ignoreKeywords = [
+^  "machine", "humanoid", "slow", "elemental", "insect", "arachnid",
+^  "unpushable", "boss", "serpent", "cult", "flying",
+^  "melee"
+^]
+var keywordPalette = ["#990000", "#770000", "#333333"]
+var replaceKeywordKeys = [
+^  "phase1", "phase2", "phase3",
+^  "explode", "ranged", "spawner",
+^  "immune_to_stun", "immune_to_debuff_chill", "immune_to_debuff_damage", "immune_to_ranged",
+^  "immune_to_physical", "immune_to_poison", "immune_to_fire", "immune_to_ice", "immune_to_aether", "immune_to_vigor",
+^  "magic_resist", "magic_vulnerability"
+^]
+var replaceKeywordColors = [
+^  color.Lerp("#FFDD00", "#000000", 0.5), color.Lerp("#FFDD00", "#000000", 0.25), "#FFDD00",
+^  "#FF0000", "#FFFF00", "#99FF00",
+^  "#FFFFFF", "#CCCCFF", "#007700", "#FFCC00",
+^  "#FF0000", "#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA",
+^  "#9900FF", "#AA66FF",
+^]
+var replaceKeywordVals = [
+^  "¶¹", "¶²", "¶³",
+^  "Ж", "«{", "{▲}",
+^  "║¤║", "║d❄║", "║d∞║", "║«{║",
+^  "║P║", "║∞║", "║φ║", "║❄║", "║*║", "║♥║",
+^  "¦M¦", ">M<",
+^]
+
+var replaceElementKeys = ["poison", "fire", "ice", "aether", "vigor"]
+var replaceElementVals = ["∞", "φ", "❄", "*", "♥"]
+var replaceElementColors = ["#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA"]
+
+var replacePotionBuffKeys = []
+var replacePotionBuffVals = []
+var replacePotionBuffColors = []
+
+var replaceBuffKeys = [
+^  "adaptive_defense_poison", "adaptive_defense_fire", "adaptive_defense_ice", "adaptive_defense_aether", "adaptive_defense_vigor",
+^  "Berserk", "Vamp", "Lucky", "+XP", "Strength", "Invis",
+^  "DmgDown", "P-Pocket", "DmgBuff", "DoT", "Chill", "ArmDown", "Feeble", "Smite", "Stun", "Ignite", "REFLECT"
+^]
+var replaceBuffTypes = [
+^  "adaptive", "adaptive", "adaptive", "adaptive", "adaptive",
+^  "potion", "potion", "potion", "potion", "potion", "potion",
+^  "buff", "buff", "buff", "buff", "buff", "buff", "buff", "buff", "buff", "buff", "buff"
+^]
+var replaceBuffVals = [
+^  "∞", "φ", "❄", "*", "♥",
+^  "B", "V", "L", "XP", "S", "I",
+^  "∞▼", "PP", "∞▲", "φ…", "❄▼", "Д▼", "f▼", "•", "¤", "~φ~", "←‡"
+^]
+var replaceBuffColors = [
+^  "#0066FF", "#0066FF", "#0066FF", "#0066FF", "#0066FF", "#0066FF",
+^  "#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA",
+^  "#AA0000", "#00FF00", "#00FF00", "#FFAA00", "#00FFFF", "#BBBBBB", "#0000FF", "#FF00FF", "#FFFFFF", "#FFCC00", "#FF00FF"
+^]
 
 
 func printRight(lNum, color, message, minSize)
@@ -15,14 +72,6 @@ func printRight(lNum, color, message, minSize)
   var xStart = screen.w - mSize
   >`@xStart@,@lNum@,@color@,@message@
   
-func printCooldown(x, y, twoChar, key)
-  var color = "#FF00FF"
-  ?item.GetCooldown(key) > 0
-    color = "#FF00FF"
-  :
-    color = "#440044"
-  
-  >`@x@,@y@,@color@,@twoChar@ @U.toSeconds(item.GetCooldown(key))@
   
 func displayControls(lNum)
   ?U.Get("isForcingDash")
@@ -54,8 +103,7 @@ func displayControls(lNum)
   lNum++
   lNum++
   
-  return lNum
-  
+  return lNum 
 
 func displayShiftControls(lNum)
   // ?U.Get("isForcingDash")
@@ -88,7 +136,6 @@ func displayShiftControls(lNum)
   lNum++
   
   return lNum
-  
 
 func displayCtrlControls(lNum)
   // ?U.Get("isForcingDash")
@@ -201,57 +248,49 @@ func parseBuffString(buffString)
       ?buffDisplayString ! false
         ?buffDisplayString = true
           buffDisplayString = shortenBuffString(buffStr) + " (" + buffStr + ")"
+        ?replaceKeywordKeys.Contains(buffDisplayString)
+          buffDisplayString = replaceKeywordVals[replaceKeywordKeys.IndexOf(buffDisplayString)]
         ?buffParts[2]
-          buffDisplayString = buffDisplayString + " x" + buffParts[2]
+          buffDisplayString = buffDisplayString + "×" + buffParts[2]
         ?buffParts[3]
           buffDisplayString = buffDisplayString + ":" + U.toSeconds(int.Parse(buffParts[3]))
         ?fullDisplayString
-          fullDisplayString = string.Join(",", [fullDisplayString, buffDisplayString])
+          fullDisplayString = string.Join(" • ", [fullDisplayString, buffDisplayString])
         :
           fullDisplayString = buffDisplayString
   ?fullDisplayString = false
     return ""
   return fullDisplayString
   
->`0,4,#00FFFF,→↓∆∞≈│║▀█░▒▓▲▼○☼♀♂♠♣♥♦♪♫¦§©«®°²³¶¹»¼½¾
->`0,5,#00FFFF,×Ø÷øʘΘΔψДФХфЖжд‖†‡•⁞±¤…ΦГ ‒ – — ―≠
-  
-var ignoreKeywords = [
-^  "machine", "humanoid", "slow", "elemental", "insect", "arachnid",
-^  "unpushable", "boss", "serpent", "cult",
-^  "melee"
-^]
-
-var elementKeywords = ["poison", "fire", "ice", "aether", "vigor"]
-var elementSymbols = ["∞", "φ", "❄", "*", "♥"]
-var elementColors = ["#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA"]
-
-var replaceKeywordKeys = [
-^  "phase1", "phase2", "phase3",
-^  "explode", "ranged",
-^  "immune_to_stun", "immune_to_debuff_chill", "immune_to_debuff_damage",
-^  "immune_to_physical", "immune_to_poison", "immune_to_fire", "immune_to_ice", "immune_to_aether", "immune_to_vigor",
-^  "magic_resist", "magic_vulnerability",
-^  "adaptive_defense_poison", "adaptive_defense_fire", "adaptive_defense_ice", "adaptive_defense_aether", "adaptive_defense_vigor"
-^]
-var replaceKeywordVals = [
-^  "¶¹", "¶²", "¶³",
-^  "Ж", "«{",
-^  "║¤↓║", "║❄↓║", "║∞↓║",
-^  "║P║", "║∞║", "║φ║", "║❄║", "║*║", "║♥║",
-^  "¦M¦", ">M<",
-^  "⁞∞⁞", "⁞φ⁞", "⁞❄⁞", "⁞*⁞", "⁞♥⁞"
-^]
-var coloredKeywordColors = [
-^  color.Lerp("#FFDD00", "#000000", 0.5), color.Lerp("#FFDD00", "#000000", 0.25), "#FFDD00",
-^  "#FF0000", "#FFFF00",
-^  "#FFFFFF", "#CCCCFF", "#007700",
-^  "#FF0000", "#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA",
-^  "#9900FF", "#AA66FF",
-^  "#009900", "#FF7700", "#00FFFF", "#990099", "#FFAAAA" 
-^]
-
 func displayColoredStrings(lineNum, strings, colors, xStart, isTight)
+  ?strings.Count() ! colors.Count()
+    U.Set("errorMessage", strings.Count() + "/" + colors.Count() + ": " + string.Join(",",strings))
+    return
+  var xPos = xStart
+  var thisColor
+  var thisString
+  var thisLength
+  for i = 0..(strings.Count() - 1)
+    thisColor = colors[i]
+    thisString = strings[i] + ""
+    thisLength = string.Size(thisString)
+    ?!isTight
+      thisLength++
+    >`@xPos@,@lineNum@,@thisColor@,@thisString@
+    xPos += thisLength
+      
+func displayColoredStringsRight(lineNum, strings, colors, minSize, isTight)
+  var stringSize
+  var xStart
+  ?isTight
+    stringSize = string.Size(string.Join("", strings))
+  :
+    stringSize = string.Size(string.Join(" ", strings))
+  ?minSize > stringSize
+    stringSize = minSize
+    
+  xStart = screen.w - stringSize
+
   var xPos = xStart
   var thisColor
   var thisString
@@ -267,7 +306,7 @@ func displayColoredStrings(lineNum, strings, colors, xStart, isTight)
     
 func getDistanceStrings()
   ?U.isFarAs("screen")
-    return ["     ", ""]
+    return ["     ","     "]
   :?U.isCloseAs("melee")
     return ["█████","█████"]
   :?U.isWithin("ranged", "screen")
@@ -281,7 +320,7 @@ func getDistanceStrings()
     
 func getDistanceColor()
   ?U.isFarAs("screen")
-    return "#000000"
+    return "#444444"
   :?U.isCloseAs("melee")
     return "#FF0000"
   :?U.isWithin("ranged", "screen")
@@ -293,16 +332,137 @@ func getDistanceColor()
   :?U.isWithin("melee", "close")
     return "#FF9900"
 
+func getCenteredXPos(message, width)
+  var mSize = string.Size("" + message)
+  return math.Max(0, math.Floor(0.5 * (width - mSize)))
 
+func displayParsedKeywordStrings(kStrings, xStart, yStart)
+  var keyword
+  var parsedKeyword
+  var thisColorString
+  var paletteIndex  
+  var includesPhase
+  var insertIndex
+  var keywordStrings = []
+  var keywordColors = []
+  
+  keywordStrings = []
+  keywordColors = []
+  paletteIndex = 0
+  includesPhase = false
+  insertIndex = false
+  
+  for i = 0 .. kStrings.Count()-1
+    insertIndex = false
+    keyword = string.ToLower(kStrings[i])
+    parsedKeyword = keyword
+    ?!ignoreKeywords.Contains(keyword)
+      ?replaceKeywordKeys.Contains(keyword)
+        ?["phase1", "phase2", "phase3"].Contains(keyword)
+          insertIndex = 0
+          includesPhase = true
+        parsedKeyword = replaceKeywordVals[replaceKeywordKeys.IndexOf(keyword)]
+        thisColorString = replaceKeywordColors[replaceKeywordKeys.IndexOf(keyword)]
+      :?replaceElementKeys.Contains(keyword)
+        ?includesPhase = true
+          insertIndex = 1
+        :
+          insertIndex = 0
+        parsedKeyword = "[" + replaceElementVals[replaceElementKeys.IndexOf(keyword)] + "]"
+        thisColorString = replaceElementColors[replaceElementKeys.IndexOf(keyword)]
+      :
+        thisColorString = keywordPalette[paletteIndex]
+        ?paletteIndex = 0
+          paletteIndex = 1
+        :
+          paletteIndex = 0
+
+      ?keywordStrings.Count() > 0
+        ?Type(insertIndex) = int
+          keywordStrings.Insert(insertIndex, "•")
+          keywordColors.Insert(insertIndex, keywordPalette[2])
+        :
+          keywordStrings.Add("•")
+          keywordColors.Add(keywordPalette[2])
+       
+      ?keywordStrings.Count() > 0 & Type(insertIndex) = int
+        keywordStrings.Insert(insertIndex, string.Capitalize(parsedKeyword))
+        keywordColors.Insert(insertIndex, thisColorString)
+      :
+        keywordStrings.Add(string.Capitalize(parsedKeyword))
+        keywordColors.Add(thisColorString)
+        
+  ?keywordStrings.Count() > 0
+    displayColoredStrings(yStart + 1, keywordStrings, keywordColors, xStart, true)
+
+//  func displayParsedPositiveBuffStrings(bStrings, xStart, yStart)
+//    // Adaptive: ⁞
+//    // Potion: ≈
+//    var buff
+//    var parsedBuff
+//    var buffType
+//    var thisColorString
+//    var paletteIndex  
+//    
+//    paletteIndex = 0
+//    
+//    for i = 0 .. bStrings.Count()-1
+//      buff = bStrings[i]
+//      parsedBuff = buff
+//      ?replaceBuffKeys.Contains(buff)
+//        parsedBuff = replaceBuffVals[replaceBuffKeys.IndexOf(buff)]
+//        thisColorString = replaceBuffColors[replaceBuffKeys.IndexOf(buff)]
+//        buffType = replaceBuffTypes[replaceBuffKeys.IndexOf(buff)]
+//      :
+//        thisColorString = keywordPalette[paletteIndex]
+//        ?paletteIndex = 0
+//          paletteIndex = 1
+//        :
+//          paletteIndex = 0
+//  
+//      ?keywordStrings.Count() > 0
+//        keywordStrings.Add("•")
+//        keywordColors.Add(keywordPalette[2])
+//  
+//      keywordStrings.Add(parsedBuff)
+//      keywordColors.Add(thisColorString)
+//          
+//    ?keywordStrings.Count() > 0
+//      displayColoredStrings(yStart + 1, keywordStrings, keywordColors, xStart, true)
+//  
+//  
+//  func displayParsedNegativeBuffString(bStrings, xStart, yStart)
+  
+func displayParsedCooldownString(cdKey, cdSymbol, xStart, yStart, ifActiveOnly)
+  ?ifActiveOnly & item.GetCooldown(cdKey) <= 0
+    return
+  var labelColor
+  var timeColor
+  var lerpFraction = 0.1
+  ?item.GetCooldown(cdKey) > (10 * 30)
+    labelColor = "#AA2222"
+    timeColor = "#440044"
+  :?item.GetCooldown(cdKey) > 0
+    lerpFraction = item.GetCooldown(cdKey) / (10.0 * 30.0)
+    labelColor = "#AAAA00"
+    timeColor = color.Lerp("#FF00FF", "#440044", lerpFraction) 
+  :
+    labelColor = "#22AA22"
+    timeColor = "#000000"
+  displayColoredStrings(yStart, [cdSymbol, U.toSeconds(item.GetCooldown(cdKey))], [labelColor, timeColor], xStart, true)
+  
+ 
 func displayFoe(startLine, xStart)
-  var foeName = string.ToUpper(foe.name)
-  var nameIndex = String.IndexOf(foe, foe.name)
-  var nameLength = String.Size(foe.name)
-  var foeSuffix = String.Sub(foe, nameIndex + nameLength)
-  var foeKeywords = String.Split(foeSuffix, true)
-  var numRows = Math.CeilToInt(foeKeywords.Count() / 2)
-  var distanceStrings = getDistanceStrings()
-  var distanceColor = getDistanceColor()
+  var foeName
+  var distanceStrings
+  var distanceColor
+  
+  ?foe = boss
+    foeName = string.ToUpper(foe.name)
+  :
+    foeName = foe.name
+  distanceStrings = getDistanceStrings()
+  distanceColor = getDistanceColor()
   ?Type(distanceStrings) = Type([])
     displayColoredStrings(startLine, [
     ^   distanceStrings[0],
@@ -316,46 +476,15 @@ func displayFoe(startLine, xStart)
     ^ xStart,
     ^ true
     ^)
-  var xOffset = 0
-  xOffset = 0
-  var keywordPalette = ["#990000", "#770000", "#333333"]
-  var paletteIndex
-  paletteIndex = 0
-  var keywordStrings = []
-  keywordStrings.Clear()
-  var keywordColors = []
-  keywordColors.Clear()
-  var keyword
-  var parsedKeyword
-  var thisColorString
-  for i = 0 .. foeKeywords.Count()-1
-    keyword = string.ToLower(foeKeywords[i])
-    parsedKeyword = keyword
-    ?!ignoreKeywords.Contains(keyword)
-      ?replaceKeywordKeys.Contains(keyword)
-        parsedKeyword = replaceKeywordVals[replaceKeywordKeys.IndexOf(keyword)]
-        thisColorString = coloredKeywordColors[replaceKeywordKeys.IndexOf(keyword)]
-      :?elementKeywords.Contains(keyword)
-        parsedKeyword = "[" + elementSymbols[elementKeywords.IndexOf(keyword)] + "]"
-        thisColorString = elementColors[elementKeywords.IndexOf(keyword)]
-      :
-        thisColorString = keywordPalette[paletteIndex]
-        ?paletteIndex = 0
-          paletteIndex = 1
-        :
-          paletteIndex = 0
 
-      ?keywordStrings.Count() > 0
-        keywordStrings.Add("•")
-        keywordColors.Add(keywordPalette[2])
-
-      keywordStrings.Add(string.Capitalize(parsedKeyword))
-      keywordColors.Add(thisColorString)
-  ?keywordStrings.Count() > 0
-    startLine++
-    displayColoredStrings(startLine, keywordStrings, keywordColors, xOffset, true)
-  startLine++
-  return startLine
+  var foeSuffix
+  var foeKeywords
+  
+  foeSuffix = String.Sub(foe, String.IndexOf(foe, foe.name) + String.Size(foe.name))
+  foeKeywords = String.Split(foeSuffix, true)
+  displayParsedKeywordStrings(foeKeywords, xStart, startLine)
+  
+  return startLine + 2
   
 func getTimeColor(curTime, maxTime, isReversing)
   var lerpMidpoint = 0.75
@@ -420,40 +549,83 @@ func displayTimeData(startLine)
     bestTimeString = U.toPercent(totalTime, loc.bestTime) + " of Best (" + time.FormatDigital(loc.bestTime) + ")"
     bestTimeStringSize = string.Size(bestTimeString)
     bestStringColor = getTimeColor(totalTime, loc.bestTime, false)
+  
+  var stringSize
+  stringSize = string.Size(curTimeString)
+  printRight(startLine, curTimeStringColor, curTimeString, stringSize + 4)
+  stringSize = string.Size(averageTimeString)
+  printRight(startLine + 1, bestStringColor, bestTimeString, stringSize + 4)
+  printRight(startLine + 2, averageStringColor, averageTimeString, stringSize + 4)
+  // printRight(startLine + 3, exitStringColor, exitTimeString, 0)
+  
+func displayAIStatus(lNum)
+  var displayStrings = ["E","I","P","W"]
+  var displayColors = []
+  var colorGreen = "#00FF00"
+  var colorRed = "#880000"
+
+  ?ai.enabled
+    displayColors.Add(colorGreen)
+  :
+    displayColors.Add(colorRed)
+  ?ai.idle
+    displayColors.Add(colorGreen)
+  :
+    displayColors.Add(colorRed)
+  ?ai.paused
+    displayColors.Add(colorGreen)
+  :
+    displayColors.Add(colorRed)
+  ?ai.walking
+    displayColors.Add(colorGreen)
+  :
+    displayColors.Add(colorRed)
     
-  printRight(startLine, curTimeStringColor, curTimeString, 0)
-  printRight(startLine + 1, bestStringColor, bestTimeString, 0)
-  printRight(startLine + 2, averageStringColor, averageTimeString, 0)
-  printRight(startLine + 3, exitStringColor, exitTimeString, 0)
+  displayColoredStringsRight(lNum, displayStrings, displayColors, 0, true)
 
 func Display()
   // === HUD Info Display ===
   var xStart = 0
-  var yStart = 6
+  var yStart = 5
   var lineNum = yStart
   
   ?U.Get("errorMessage")
-    >`25,0,#FF0000,@U.Get("errorMessage")@
+    >`@getCenteredXPos(U.Get("errorMessage"), screen.w)@,2,#FF0000,@U.Get("errorMessage")@
   ?U.Get("majorDamageAlert")
-    printRight(3,"#FFAAAA",U.Get("majorDamageAlert"),0)
+    printRight(3,"#FF0000","██▒░░" + U.Get("majorDamageAlert") + "░░▒██",0)
     
-  ?Type(U.Get("mindFreeze")) = int
-    >`25,3,#00FFFF,mFreeze: @U.Get("mindFreeze")@ (@Type(U.Get("mindFreeze"))@) = @totalTime - U.Get("mindFreeze")@
-
-
+  ?U.Get("isShowingAIStatus")
+    displayTimeData(screen.h - 2 - 1 - 2)
+    displayAIStatus(screen.h - 2)
+  :
+    displayTimeData(screen.h - 2 - 2)
     
+  displayParsedCooldownString("mind", "«M", 0, 24, U.Get("hideHUD"))
+  displayParsedCooldownString("bash", "B»", 4, 24, U.Get("hideHUD"))
+  displayParsedCooldownString("dash", "d>", 8, 24, U.Get("hideHUD"))
+  
+  displayParsedCooldownString("blade", "BFG", 0, 25, U.Get("hideHUD"))
+  displayParsedCooldownString("mask", "CM", 6, 25, U.Get("hideHUD"))
+  ?U.Get("skeletonArm")
+    displayParsedCooldownString("skeleton_arm", "Sk",11, 25, U.Get("hideHUD"))
+    displayParsedCooldownString("bardiche", "Bd", 16, 25, U.Get("hideHUD"))
+    displayParsedCooldownString("hammer", "HH", 21, 25, U.Get("hideHUD"))
+  :
+    displayParsedCooldownString("bardiche", "Bd", 11, 25, U.Get("hideHUD"))
+    displayParsedCooldownString("hammer", "HH", 16, 25, U.Get("hideHUD"))
+
   ?U.Get("hideHUD")
     printRight(0,"#FF0000","[Z] HUD", 0)
     return
 
   var locStringColors = []
-  var foeCountString = "   "
+  var foeCountString = "    "
   ?foe.count = 0
-    foeCountString = "   "
+    foeCountString = "    "
   :?foe.count <= 9
-    foeCountString = " x" + foe.count
+    foeCountString = " x" + foe.count + " "
   :?foe.count >= 10
-    foeCountString = "x" + foe.count
+    foeCountString = "x" + foe.count + " "
 
 
   ?loc.stars <= 5
@@ -462,13 +634,13 @@ func Display()
     locStringColors = ["#FF0000", "#00FFFF", "#00CCCC"]
   :
     locStringColors = ["#FF0000", "#FFDD00", "#AA8800"]
-  displayColoredStrings(1, [
+  displayColoredStrings(4, [
   ^   foeCountString,
-  ^   string.ToUpper(loc.name),
-  ^   loc.stars + "*"],
+  ^   string.ToUpper(loc.name) + " ",
+  ^   loc.stars + "*" + "         "],
   ^ locStringColors,
   ^ xStart,
-  ^ false
+  ^ true
   ^)
  
   ?pickup.distance < 9999
@@ -482,44 +654,18 @@ func Display()
   ?foe.damage > -1
     displayFoe(lineNum, xStart)
     lineNum += 2
-    displayColoredStrings(lineNum, [
-    ^ ">" + foe.damage + "<",
-    ^ "[" + foe.state + ":" + foe.time + "]"
-    ^],
-    ^stateDmgColors,
-    ^4,
-    ^ false)
-    lineNum++
     >`@xStart@,@lineNum@,#DD0000,+ @parseBuffString(foe.buffs.string)@
     lineNum++
     >`@xStart@,@lineNum@,#009900,- @parseBuffString(foe.debuffs.string)@
   :
-    lineNum += 4
+    >`@xStart@,@lineNum@,#DD0000,@"                                     "@
+    lineNum += 3
   
   lineNum++
   lineNum++
   >`@xStart@,@lineNum@,#00FF00,+ @parseBuffString(buffs.string)@
   lineNum++ 
   >`@xStart@,@lineNum@,#FF0000,- @parseBuffString(debuffs.string)@
-  
-  lineNum = 23
-  xStart = 2
-   
-  printCooldown(xStart, lineNum, ">Q", "quarterstaff")
-  printCooldown(xStart + 6, lineNum, "<<", "mind")
-  printCooldown(xStart + 12, lineNum, ">>", "bash")
-  printCooldown(xStart + 18, lineNum, " >", "dash")
-  lineNum++
-  
-  printCooldown(xStart, lineNum, "BG", "blade")
-  printCooldown(xStart + 6, lineNum, " M", "mask")
-  printCooldown(xStart + 12, lineNum, " H", "hammer")
-  lineNum++
-  
-  printCooldown(xStart, lineNum, "Sk", "skeleton_arm")
-  printCooldown(xStart + 6, lineNum, " B", "bardiche")
-  printCooldown(xStart + 12, lineNum, " T", "fire_talisman")
-  lineNum++
   
   
   var rightYStart = 0
@@ -534,58 +680,57 @@ func Display()
   :
     rightLineNum += displayControls(rightLineNum)
   
-  var statusString
-  ?U.getCounterElement()
-    statusString = "[" + U.getCounterElement() + "]"
-  :
-    statusString = ""
-  statusString += " I: " + screen.i + ", X: " + screen.x
+  ?U.Get("isShowingStatusString")
+    var statusString
+    ?U.getCounterElement()
+      statusString = "[" + U.getCounterElement() + "]"
+    :
+      statusString = ""
+    statusString += " I: " + screen.i + ", X: " + screen.x
+      
+    printRight(rightLineNum, "#FF00FF", statusString, 0)
+  rightLineNum++
+  
+  ?U.Get("isShowingWeaponAssignments")
+    var oneHandedColor = #00FFFF
+    ?U.Get("assignedBoth") ! false
+      oneHandedColor = #999999
+      printRight(rightLineNum, "#00FFFF", "[<>] " + U.Get("assignedBoth"), 27)
+      printRight(rightLineNum + 1, "#00BBBB", U.Get("bothReason"), 12)
+    :
+      oneHandedColor = #00FFFF
+    rightLineNum++
+    rightLineNum++
     
-  printRight(rightLineNum, "#FF00FF", statusString, 0)
-  rightLineNum++
-  
-  var oneHandedColor = #00FFFF
-
-  ?U.Get("assignedBoth") ! false
-    oneHandedColor = #999999
-    printRight(rightLineNum, "#00FFFF", "[<>] " + U.Get("assignedBoth"), 27)
-    printRight(rightLineNum + 1, "#00BBBB", U.Get("bothReason"), 12)
-  :
-    oneHandedColor = #00FFFF
-  rightLineNum++
-  rightLineNum++
-
-  ?U.Get("assignedLeft") ! false
-    printRight(rightLineNum, oneHandedColor, "[ >] " + U.Get("assignedLeft"), 27)
-    printRight(rightLineNum + 1, oneHandedColor, U.Get("leftReason"), 12)
-  rightLineNum++
-  rightLineNum++
-
-  ?U.Get("assignedRight") ! false
-    printRight(rightLineNum, oneHandedColor, "[< ] " + U.Get("assignedRight"), 27)
-    printRight(rightLineNum + 1, oneHandedColor, U.Get("rightReason"), 12)
-  rightLineNum++
-  rightLineNum++
-  
-  ?U.Get("isActivating")
-    printRight(rightLineNum, "#FF00FF", "ACTIVATING: [" + U.Get("isActivating") + "]", 15)
+    ?U.Get("assignedLeft") ! false
+      printRight(rightLineNum, oneHandedColor, "[ >] " + U.Get("assignedLeft"), 27)
+      printRight(rightLineNum + 1, oneHandedColor, U.Get("leftReason"), 12)
+    rightLineNum++
+    rightLineNum++
     
-  displayTimeData(22)
-  
-  lineNum = yStart
-  rightLineNum = rightYStart
-  
-  var debugData = false
-  var callsArray = []
-  var lastCall = false
-  var callsString = ""
-  
-  debugData = U.getDPSDebugData()
-  callsArray = debugData[0]
-  lastCall = debugData[1]
-
-  ?lastCall
-    >`0,24,#FFFF00,@lastCall@
-    callsString = string.Join(".", callsArray)
-    >`0,25,#FFFF00,@callsString@
+    ?U.Get("assignedRight") ! false
+      printRight(rightLineNum, oneHandedColor, "[< ] " + U.Get("assignedRight"), 27)
+      printRight(rightLineNum + 1, oneHandedColor, U.Get("rightReason"), 12)
+    rightLineNum++
+    rightLineNum++
     
+    ?U.Get("isActivating")
+      printRight(rightLineNum, "#FF00FF", "ACTIVATING: [" + U.Get("isActivating") + "]", 15)
+  
+    
+  // lineNum = yStart
+  // rightLineNum = rightYStart
+  // 
+  // var debugData = false
+  // var callsArray = []
+  // var lastCall = false
+  // var callsString = ""
+  // 
+  // debugData = U.getDPSDebugData()
+  // callsArray = debugData[0]
+  // lastCall = debugData[1]
+  // 
+  // ?lastCall
+  //   >`0,24,#FFFF00,@lastCall@
+  //   callsString = string.Join(".", callsArray)
+  //   >`0,25,#FFFF00,@callsString@

@@ -9,6 +9,11 @@
 // bumpL        Z
 // bumpR        C
 
+var bardicheActivationDelay
+bardicheActivationDelay = 1
+var heavyHammerActivationDelay
+heavyHammerActivationDelay = 5
+
 var bosses = ["dysangelos", "poena", "bolesh", "morel", "pallas", "bronze_guardian", "yeti", "nagaraja"]
 var bossNoDebuffCheck = [false, false, false, false, "phase2", false, false, false]
 
@@ -108,6 +113,12 @@ func Init()
     Set("hideHUD", false)
   ?!Has("HUDMenuMode")
     Set("HUDMenuMode", false)
+  ?!Has("isShowingStatusString")
+    Set("isShowingStatusString", false)
+  ?!Has("isShowingWeaponAssignments")
+    Set("isShowingWeaponAssignments", false)
+  ?!Has("isShowingAIStatus")
+    Set("isShowingAIStatus", false) 
   ?!Has("staffSpeed")
     Set("staffSpeed", true)
   ?!Has("isSpeedRunning")
@@ -152,16 +163,20 @@ func Init()
     Set("isDodgingNextFrame", false)
   ?!Has("rangedFreeze")
     Set("rangedFreeze", false)
+  ?!Has("bardicheLog")
+    Set("bardicheLog", false)
+  ?!Has("heavyHammerLog")
+    Set("heavyHammerLog", false)
   ?!Has("lastFrameHP")
-    Set("lastFrameHP", hp)
+    lastFrameHP = hp
   ?!Has("lastFrameState")
-    Set("lastFrameState", false)
+    lastFrameState = false
   ?!Has("lastFrameStateTime")
-    Set("lastFrameState", false)
+    lastFrameState = false
   ?!Has("secondLastFrameState")
-    Set("secondLastFrameState", false)
+    secondLastFrameState = false
   ?!Has("secondLastFrameStateTime")
-    Set("secondLastFrameStateTime", false)
+    secondLastFrameStateTime = false
   ?!Has("majorDamageAlert")
     Set("majorDamageAlert", false)
   ?!Has("maxOverAvgToExitMult")
@@ -175,21 +190,81 @@ func Init()
   ?!Has("dpsWatchAvgDPS")
     Set("dpsWatchAvgDPS", 0)
 
+    
+var timeInState = 0
+var lastBardicheState = false
+var lastBardicheStateTime = 0
+var hasActivatedHeavyHammer = false
+var hasActivatedBardiche = false
+var lastHeavyHammerState = false
+var lastHeavyHammerStateTime = 0
+var lastFrameHP = hp
+var lastFrameState = false
+var lastFrameStateTime = 0
+var secondLastFrameState = false
+var secondLastFrameStateTime = 0
+
 func Reset(isLocStart)
-  Set("errorMessage", false)
   InitLeft()
   InitRight()
   InitBoth()
-  Set("isActivating", false)
   Set("isForcingDash", false)
-  Set("lastFrameHP", hp)
-  ?Get("lastFrameState")
-    Set("secondLastFrameState", Get("lastFrameState"))
-  ?Get("lastFrameStateTime")
-    Set("secondLastFrameStateTime", Get("lastFrameStateTime"))
+  
+  ?(lastFrameHP - hp) > 1
+    var alertMessage
+    alertMessage = (lastFrameHP - hp) + " Dmg»"
+    ?secondLastFrameState
+      alertMessage += secondLastFrameState + ":" + secondLastFrameStateTime + "»"
+    ?lastFrameState
+      alertMessage += lastFrameState + ":" + lastFrameStateTime + "»"
+    alertMessage += foe.state + ":" + foe.time
+    Set("majorDamageAlert", alertMessage)
+
+  var bardicheLog
+  bardicheLog = Get("bardicheLog")
+  ?string.Size("" + bardicheLog) > 80
+    Set("bardicheLog", "")
+  ?item.right = bardiche
+    ?!lastBardicheState
+      lastBardicheState = item.right.state
+      lastBardicheStateTime = totalTime
+      Set("bardicheLog", item.right.state + ":")
+    :?lastBardicheState ! item.right.state
+      timeInState = totalTime - lastBardicheStateTime
+      Set("bardicheLog", Get("bardicheLog") + timeInState + " > " + item.right.state + ":")
+      lastBardicheState = item.right.state
+      lastBardicheStateTime = totalTime
+  :?lastBardicheState
+    timeInState = totalTime - lastBardicheStateTime
+    Set("bardicheLog", Get("bardicheLog") + timeInState)
+    lastBardicheState = false
+    lastBardicheStateTime = 0
+    
+  ?item.right = heavy hammer & hasActivatedHeavyHammer
+    ?!lastHeavyHammerState
+      lastHeavyHammerState = item.right.state
+      lastHeavyHammerStateTime = totalTime
+      Set("heavyHammerLog", item.right.state + ":")
+    :?lastHeavyHammerState ! item.right.state & lastHeavyHammerState ! 5
+      ?lastHeavyHammerState < 4
+        timeInState = totalTime - lastHeavyHammerStateTime
+        Set("heavyHammerLog", Get("heavyHammerLog") + timeInState + " > " + item.right.state + ":")
+        lastHeavyHammerState = item.right.state
+        lastHeavyHammerStateTime = totalTime
+      :
+        timeInState = totalTime - lastHeavyHammerStateTime
+        Set("heavyHammerLog", Get("heavyHammerLog") + timeInState)
+        lastHeavyHammerState = 5
+  
+  lastFrameHP = hp
+  ?lastFrameState
+    secondLastFrameState = lastFrameState
+  ?lastFrameStateTime
+    secondLastFrameStateTime = lastFrameStateTime
   ?foe.count > 0
-    Set("lastFrameState", foe.state)
-    Set("lastFrameStateTime", foe.time)
+    lastFrameState = foe.state
+    lastFrameStateTime = foe.time
+  checkActivationAlert()
   ?Get("isForcingBotFG") & item.GetCooldown("blade") > 0
     Set("isForcingBotFG", false)
     ?Get("bothPriority") = 4
@@ -211,6 +286,9 @@ func Reset(isLocStart)
     Set("bothPriority", 0)
     Set("isForcingBotFG", false)
     Set("majorDamageAlert", false)
+    Set("mindFreeze", false)
+    Set("bardicheLog", "")
+    Set("heavyHammerLog", "")
     Set("dpsWatchFoeID", false)
     Set("dpsWatchFoeApH", false)
     Set("dpsWatchSkippedFrames", 0)
@@ -225,11 +303,38 @@ func Pad(val, length)
   var stringVal = "             " + val
   return string.Sub(stringVal, string.Size(stringVal) - length + 1)
 
+var activationAlertTime
+func clearActivationAlertIn(secs)
+  activationAlertTime = totalTime + (secs * 30)
+func checkActivationAlert()
+  ?Type(activationAlertTime) = int & Type(Get("isActivating")) = string & string.Size(Get("isActivating")) > 2
+    ?totalTime >= activationAlertTime
+      Set("isActivating", false)
+      activationAlertTime = false
+
+
 func ActivateItem()
-  ?Get("isActivating")
-  ^ & [Get("assignedLeft"), Get("assignedRight"), Get("assignedBoth")].Contains(Get("isActivating"))
-  ^ & item.CanActivate()
+  ?!item.CanActivate()
+    return
+  ?!ai.enabled
+    return
+  ?Get("isActivating") = "heavy hammer"
+    hasActivatedHeavyHammer = true
+    lastHeavyHammerState = item.right.state
+    lastHeavyHammerStateTime = totalTime
+    Set("heavyHammerLog", item.right.state + ":")
     activate R
+  :?Get("isActivating") = "bardiche"
+    hasActivatedBardiche = true
+    lastBardicheState = item.right.state
+    lastBardicheStateTime = totalTime
+    Set("bardicheLog", item.right.state + ":")
+    activate R
+  :?Get("isActivating")
+  ^ & [Get("assignedLeft"), Get("assignedRight"), Get("assignedBoth")].Contains(Get("isActivating"))
+  ^ & item.CanActivate() 
+    activate R
+  Set("isActivating", false)
   
 func InitLeft()
   var stateWatch = 0
@@ -273,38 +378,60 @@ func InitBoth()
 
 func AssignBoth(item, priority, reason)
   ?priority < 0
+    Set("assignedBoth", false)
+    Set("bothReason", "")
     Set("bothPriority", 0)
     return
   ?Type(item) = "string" & string.Size(item) > 2
     ?item.GetCount(item) = 0
       return
+  ?item.right = bardiche & item.GetCooldown("bardiche") > ((30 - bardicheActivationDelay) * 30)
+    return
+  ?item.right = heavy hammer & item.GetCooldown("heavy hammer") > ((22 - heavyHammerActivationDelay) * 30)
+    return
   ?Get("bothPriority") <= priority & Get("leftPriority") <= priority & Get("rightPriority") <= priority
+    AssignLeft("", -1, "")
+    AssignRight("", -1, "")
     Set("assignedBoth", item)
     Set("bothReason", priority + ": " + reason)
     Set("bothPriority", priority)
 
 func AssignLeft(item, priority, reason)
   ?priority < 0
+    Set("assignedLeft", false)
+    Set("leftReason", "")
     Set("leftPriority", 0)
     return
   ?Type(item) = "string" & string.Size(item) > 2
     ?item.GetCount(item) = 0
       return
+  ?item.right = bardiche & item.GetCooldown("bardiche") > ((30 - bardicheActivationDelay) * 30)
+    return
+  ?item.right = heavy hammer & item.GetCooldown("heavy hammer") > ((22 - heavyHammerActivationDelay) * 30)
+    return
   ?isTwoHanded(item)
     AssignBoth(item, priority, reason)
   :?Get("leftPriority") <= priority & Get("bothPriority") <= priority
+    AssignBoth("", -1, "")
     Set("assignedLeft", item)
     Set("leftReason", priority + ": " + reason)
     Set("leftPriority", priority)
 
 func AssignRight(item, priority, reason)
   ?priority < 0
+    Set("assignedRight", false)
+    Set("rightReason", "")
     Set("rightPriority", 0)
     return
   ?Type(item) = "string" & string.Size(item) > 2
     ?item.GetCount(item) = 0
       return
+  ?item.right = bardiche & item.GetCooldown("bardiche") > ((30 - bardicheActivationDelay) * 30)
+    return
+  ?item.right = heavy hammer & item.GetCooldown("heavy hammer") > ((22 - heavyHammerActivationDelay) * 30)
+    return
   ?Get("rightPriority") <= priority & Get("bothPriority") <= priority
+    AssignBoth("", -1, "")
     Set("assignedRight", item)
     Set("rightReason", priority + ": " + reason)
     Set("rightPriority", priority)
@@ -413,6 +540,8 @@ func getDashShield()
     return false
 
 func canDash()
+  ?!ai.enabled
+    return false
   ?!getDashShield()
     return false
   ?Get("isForcingDash") & isInRange(11, 15)
@@ -427,9 +556,11 @@ func canDash()
       return false
 
   ?foe.count <= 2 & isInRange(11, 15)
-   return getDashShield()
-  ?!Get("isSpeedRunning") & (foe.count >= 10 | getEndurance() < 1 | armor < (0.5 * maxarmor))
+    return getDashShield()
+  ?!Get("isSpeedRunning") & !Get("preferMelee") & (foe.count >= 10 | getEndurance() < 1 | armor < (0.5 * maxarmor))
     return false
+  ?Get("preferMelee") & item.GetCooldown("bash") <= 0 & isInRange(11, 15)
+    return "bash"
   ?isInRange(11, 15) & (foe ! explode | foe = bomb cart)
     return getDashShield()
   return false
@@ -445,6 +576,10 @@ func isDebuffing(threshold, debuff)
   for i = 0..(bossNoDebuffCheck.Count() - 1)
     ?foe = bosses[i] & foe = bossNoDebuffCheck[i]
       return false
+      
+  ?Type(threshold) ! int & Type(threshold) ! float
+    Set("errorMessage", "Threshold '" + threshold + "' for '" + debuff + "' is a '" + Type(threshold) + "'")
+    threshold = 0
 
   var isBelowThreshold = (foe.hp + foe.armor) <= threshold * (foe.maxhp + foe.maxarmor)
 
@@ -592,12 +727,18 @@ func brewPotion(potion)
     brew tar + bronze
 
 func isFacingBoss()
-  ?isInRange(0, 35)
-    ?foe = dysangelos | (loc = deadwood & foe = boss) | foe = bolesh | (loc = mushroom & foe = boss) | foe = pallas | foe = bronze_guardian | foe = hrímnir | foe = nagaraja
-      return true
+  ?foe = boss & isInRange(0, 35) & (totalTime - time) > 100
+    return true  
   return false
- 
+
+
 func checkForAAC()
+  ?!ai.enabled
+    return
+  ?item.right = heavy hammer & item.GetCooldown("heavy hammer") > ((22 - heavyHammerActivationDelay) * 30)
+    return
+  ?item.right = bardiche & item.GetCooldown("bardiche") > ((30 - bardicheActivationDelay) * 30)
+    return
   ?item.left.state = 3
     equipL wand *0
   ?item.right.state = 3

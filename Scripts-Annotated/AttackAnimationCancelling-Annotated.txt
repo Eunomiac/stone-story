@@ -1,0 +1,134 @@
+// Video demonstration of AAC: https://youtu.be/BGKyCCMCUXY
+//  (note: the large AAC display only appears in the video,
+//   it will not be present when you run this script yourself!)
+
+/* ███ isEquippedTwoHanded()                              ███
+   ███    => true or false                                ███
+   A function that checks your currently-equipped items and
+   returns true if you have a two-handed weapon equipped, or
+   false otherwise. */
+   
+func isEquippedTwoHanded()
+
+  /* There isn't a surefire way to check whether a given
+  item is a two-handed weapon or not. But, IF WE ASSUME that
+  you will ALWAYS have something equipped in your off-hand
+  whenever you're wielding a one-handed weapon, we can
+  check if one of your hands is empty.
+    Since two-handed weapons always appear in your right
+  hand, we just need to check if your left hand is empty:
+
+  return !item.left
+
+/* === NOTES ===
+   If you want a more robust check for a two-handed
+weapon --- say, one that doesn't make the assumption that
+you'll always have something in your off-hand when you're
+able --- you can compile a list of the two-handed weapons
+in the game and check for each of those directly (there
+aren't many).
+   This is why I moved the simple '!item.left' check into
+its own function: Doing this lets you change the logic of
+something in your script (i.e. how you check for two-handed
+weapons) without having to go through your script and change
+each '!item.left' check (which you'd have to do if you
+made that check directly, instead of using the function).
+Instead, just change how the function makes its check, and
+every "isEquippedTwoHanded()" line in your script will 
+follow the new logic automatically.  */
+
+/* ███ CheckForAAC()                                      ███
+   ███    => (no return value)                            ███
+   A function that interrupts the attack animation of your
+   weapon as soon as it deals damage, allowing you to attack
+   again immediately. This can greatly increase your attack
+   speed and DPS. */
+
+func CheckForAAC()
+
+  /* First, we use a "guard clause" at the top of our function
+  to confirm that you're in a location where combat can happen.
+  "Guard clauses" are conditional checks that cancel the rest
+  of the function by exiting early if some check is met. */
+     
+  ?!ai.enabled
+    return
+
+  /* Next, we save the current status of your equipment, so we
+  can restore them after we've interrupted your attack animations.
+    We also need to store whether you have a two-handed weapon
+  equipped, or if you have items in both hands. */
+  
+  var isTwoHanded = isEquippedTwoHanded()
+  var leftItem = item.left
+  var rightItem = item.right
+  
+  /* Now for the magic: After a weapon deals damage, its "state"
+  changes to '3' as it runs its follow-up animation. So, 
+  we check its state, and we immediately equip a dummy
+  item to interrupt the animation if its state equals 3: */
+
+  ?item.right.state = 3
+    equipR shield *0 +0 // equips a zero-star basic shield
+    
+  ?item.left.state = 3
+    equipL wand *0 +0   // equips a zero-star basic stone wand
+    
+  /* Finally, we re-equip your proper weapons, depending on
+  whether you were wielding a two-handed weapon, or two
+  one-handed weapons.
+    Note that, when equipping from a variable, we have to
+  tell StoneScript this by surrounding the variable name in
+  @-symbols (if we didn't, and wrote 'equip rightItem' instead,
+  StoneScript would try to equip an item called "rightItem". */
+  
+  ?isTwoHanded
+    ?rightItem
+      equip @rightItem@ // 'equip' is necessary for two-handed weapons
+    :?leftItem
+      equip @leftItem@
+  :
+    ?rightItem
+      equipR @rightItem@ // 'equipR' for right-hand
+    ?leftItem
+      equipL @leftItem@  // 'equipL' for left-hand
+     
+/* ██████████████████████ USAGE EXAMPLE ████████████████████
+   'CheckForAAC' is meant to be used every single frame, so you
+   should call it every time your script runs, perhaps right
+   after you define the function: */
+   
+CheckForAAC()
+
+/* ██████████████████ UNANNOTATED FUNCTIONS █████████████████
+   All those comments can make the code itself hard to follow.
+       Here's the full code without any comment lines. */
+
+func isEquippedTwoHanded()
+  return !item.left
+
+func CheckForAAC()
+  ?!ai.enabled
+    return
+
+  var isTwoHanded = isEquippedTwoHanded()
+  var leftItem = item.left
+  var rightItem = item.right
+  
+  ?item.right.state = 3
+    equipR shield *0 +0
+  ?item.left.state = 3
+    equipL wand *0 +0
+  
+  ?isTwoHanded
+    ?rightItem
+      equip @rightItem@
+    :?leftItem
+      equip @leftItem@
+  :
+    ?rightItem
+      equipR @rightItem@
+    ?leftItem
+      equipL @leftItem@
+	  
+CheckForAAC()

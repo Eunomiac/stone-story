@@ -1,0 +1,164 @@
+// === CONFIG ===
+// Default Weapons (MUST be set!)
+var defaultOneHandedMeleeWeapon = "big aether sword U"
+var defaultShield = "compound shield +11"
+
+// Elemental Weapons (set to false if you don't have one)
+var oneHandedMeleeVsVigor = "poison sword D"
+var oneHandedMeleeVsAether = "vigor sword D"
+var oneHandedMeleeVsFire = "aether sword D"
+var oneHandedMeleeVsIce = "fire sword D"
+var oneHandedMeleeVsPoison = "ice sword D"
+
+// Anti-Armor Weapons (set only one; set the other (or both) to false) 
+var oneHandedMeleeVsArmor = false
+var twoHandedMeleeVsArmor = "heavy hammer"
+// === END CONFIG ===
+
+var eqBoth
+var eqLeft
+var eqRight
+var actItem
+var potionType
+var curMeleeWeapon
+var dashFreeze
+dashFreeze = false
+
+func eq(item)
+  ?item & Type(item) = "string" & item.GetCount(item) > 0
+    ?(!eqBoth & !eqLeft & !eqRight)
+      eqBoth = item
+      return true
+  return false
+  
+func eqL(item)
+  ?item & Type(item) = "string" & item.GetCount(item) > 0
+    ?(!eqBoth & !eqLeft)
+      eqLeft = item
+      return true
+  return false
+
+func eqR(item)
+  ?item & Type(item) = "string" & item.GetCount(item) > 0
+    ?(!eqBoth & !eqRight)
+      eqRight = item
+      return true
+  return false
+  
+func activateItem(item)
+  ?item & Type(item) = "string" & item.GetCount(item) > 0
+    ?[eqBoth, eqLeft, eqRight].Contains(item)
+      actItem = item
+      return true
+  return false
+  
+func EquipAndActivate()
+  ?eqBoth
+    equip @eqBoth@
+  :
+    ?eqLeft
+      equipL @eqLeft@
+    ?eqRight
+      equipR @eqRight@      
+  ?actItem & [eqBoth, eqLeft, eqRight].Contains(actItem)
+    activate R
+
+?loc = rocky
+  ?loc.begin  
+    ?item.potion ! empty & !potionType
+      ?item.potion = cleansing | item.potion = defensive | item.potion = healing | item.potion = vampiric
+        potionType = "healing"
+      :?item.potion = lucky | item.potion = berserk | item.potion = lightning
+        potionType = "offensive"
+      :?item.potion = strength
+        potionType = "armor"
+      :?item.potion = invisibility
+        potionType = "defensive"
+      :
+        potionType = "other"
+
+  curMeleeWeapon = defaultOneHandedMeleeWeapon
+  eqBoth = false
+  eqLeft = false
+  eqRight = false
+
+  ?Type(dashFreeze) = int & totalTime >= dashFreeze
+    dashFreeze = false
+
+  ?potionType = healing & hp < 0.25 * maxhp
+    activate potion
+
+  ?foe = dysangelos | foe = acronian
+
+    ?item.left.state = 3
+      equipL sword *0
+    ?item.right.state = 3
+      equipR wand *0
+    
+    ?foe = dysangelos & foe = phase1 & foe.state = 33 & item.GetCooldown("mind") <= 0
+      dashFreeze = totalTime + 60
+      eq("mind")
+    :?foe = dysangelos & foe = phase3 & foe.state = 115 & foe.time >= 60 & item.GetCooldown("mind") <= 0
+      dashFreeze = totalTime + 60
+      eq("mind")
+    :
+      ?foe = dysangelos
+        ?potionType = healing & hp < 0.5 * maxhp
+          activate potion
+        :?potionType = offensive & foe.state > 1
+          activate potion
+        :?potionType = armor & foe = phase3 & foe.armor > 0
+          activate potion
+        :?potionType = defensive & foe = phase3 & foe.state = 115
+            activate potion
+    
+      ?oneHandedMeleeVsVigor & foe = vigor & !(foe.buffs.string = adaptive & foe.buffs.string = poison)
+        curMeleeWeapon = oneHandedMeleeVsVigor
+      :?oneHandedMeleeVsAether & foe = aether & !(foe.buffs.string = adaptive & foe.buffs.string = vigor)
+        curMeleeWeapon = oneHandedMeleeVsAether
+      :?oneHandedMeleeVsFire & foe = fire & !(foe.buffs.string = adaptive & foe.buffs.string = aether)
+        curMeleeWeapon = oneHandedMeleeVsFire
+      :?oneHandedMeleeVsIce & foe = ice & !(foe.buffs.string = adaptive & foe.buffs.string = fire)
+        curMeleeWeapon = oneHandedMeleeVsIce
+      :?oneHandedMeleeVsPoison & foe = poison & !(foe.buffs.string = adaptive & foe.buffs.string = ice)
+        curMeleeWeapon = oneHandedMeleeVsPoison
+      :
+        curMeleeWeapon = defaultOneHandedMeleeWeapon
+          
+      ?item.GetCooldown("dash") <= 0 & (Type(dashFreeze) ! int | totalTime >= dashFreeze) & foe.distance >= 11 & foe.distance <= 15
+        eqR("dash")
+        
+      :?foe.distance <= 7
+        ?foe.buffs.string ! protection
+        ^& buffs.string ! berserk & buffs.string ! lucky & buffs.string ! strength
+          ?foe.debuffs.string ! damage & foe ! immune_to_debuff_damage & item.GetCount("dP") > 0
+            eqL("dP")
+            eqR("mask")
+          :?foe.debuffs.string ! dot & item.GetCount("dF") > 0
+            eqL("dF")
+            eqR("mask")
+          :?foe.debuffs.string ! "chill:6" & foe ! immune_to_debuff_chill & item.GetCount("dI") > 0
+            eqL("dI")
+            eqR("mask")
+          :?foe.debuffs.string ! feeble & item.GetCount("mask") > 0 & item.GetCooldown("mask") <= 0 & item.CanActivate()
+            ?eqR("mask")
+              activateItem("mask")
+
+          :?foe.armor > 0
+            ?oneHandedMeleeVsArmor
+              eqL(oneHandedMeleeVsArmor)
+            :?twoHandedMeleeVsArmor
+              eq(twoHandedMeleeVsArmor)
+              
+  :
+    ?item.GetCount("ouroboros") > 0 & hp < maxhp
+      eqL("ouroboros")
+    :?item.GetCount("star") > 0 & pickup.distance < 13
+      eqL("star")
+    :?item.GetCount("shovel") > 0
+      eq("shovel")
+      
+  eqL(curMeleeWeapon)
+  eqR(defaultShield)
+  
+  EquipAndActivate()

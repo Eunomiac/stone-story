@@ -10,23 +10,24 @@ var U = import Utilities
 // ---- THRESHOLD VALUES ----
 var smiteThreshold = 6               // Min number of foes to activate Blade of the Fallen God
 var dmgDebuffThreshold = 7           // Total damage debuff on yourself before switching out of low-damage weapons
-var splashThreshold = 3              // Total number of foes needed to trigger use of splashing weapons
-var foeArmorThreshold = 50           // If foe's armor exceeds this, switch to armor-penetrating weapon
-var fastArmorShieldMax = 14          // Max armor of "fast armor"-enchanted shield, if you have one ('fastArmorShield', below)
-var maxPickPocketBuffs = 3           // Max number of pick-pocket buffs you can have (see Skeleton Arm)
-var maxOverAvgToExitMult = 1.15      // If, during a speed run ('S' hotkey toggle), your current time exceeds your average time
+var splashThreshold = 3              // Total number of foes needed to switch to 'splashMeleeWeapon' (below)
+var foeArmorThreshold = 50           // If foe's armor exceeds this, switch to 'antiArmorMeleeWeapon' (below)
+var fastArmorShieldMax = 14          // Max armor of "Armor/sec"-enchanted shield, if you have one ('fastArmorShield', below)
+var maxPickPocketBuffs = 3           // Max number of pick-pocket buffs you can have (see your Skeleton Arm's stats for this number)
+var maxOverAvgToExitMult = 1.15      // If, during a speed run ('SHIFT+S' hotkey toggle), your current time exceeds your average time
                                      //   multiplied by this number, you'll auto-exit the stage (to prevent your average
                                      //   taking a hit).  Set to 0 to disable.
-var devourFireRuneThreshold = 3      // The number of ignition stacks on an enemy required to trigger Cinderwisp's devour.
-                                     //   Set to 0 to never trigger devour.
-var devourFireRuneBossThreshold = 10 // Same as above, but for bosses.  Set to 0 to never trigger devour against bosses.
-                                     //   Set to 0 to never trigger devour.
+var devourFireRuneThreshold = 3      // The number of ignition stacks on a non-boss foe required to trigger Cinderwisp's devour.
+                                     //   Set to 0 to never trigger devour against non-bosses.
+var devourFireRuneBossThreshold = 10 // Same as above, but for bosses.
+                                     //   Set to 0 to never trigger devour against bosses.
                                 
 // ---- ARSENAL ----
-// If you don't have a weapon for the indicated slot, set the value to 'false'.
+// If you don't have a weapon for the indicated slot, or you don't want to change your weapon in the
+//  situation described, set the value to 'false' (without any quotes).
 
-var splashMeleeWeapon = "big aether sword U"    // Name of unmaking splash weapon for mobs
-var healthHammer = "vigor hammer"               // Name of rune hammer enchanted with health bonus
+var splashMeleeWeapon = "big aether sword U"    // Name of melee splash weapon for when foes exceed 'splashThreshold'
+var healthHammer = "vigor hammer"               // Name of rune hammer enchanted with health bonus for defensive potion combo
 var antiArmorMeleeWeapon = "heavy hammer"       // Name of melee weapon to equip vs. strong armor
 var debuffDamageWeapon = "poison sword dP"      // Name of weapon to apply debuff_damage (poison)
 var debuffDoTWeapon = "fire sword dF"           // Name of weapon to apply debuff_dot (fire)
@@ -36,36 +37,40 @@ var lifeStealMeleeWeapon = false                // Name of health-stealing melee
 var lifeStealRangedWeapon = false               // Name of health-stealing ranged weapon
 var lifeStealShield = "vigor shield h"          // Name of heal-when-hit shield
 var icePillarWeapon = "big aether sword U"      // Name of weapon to use when facing ice pillars/wall in Icy Ridge
-var fastArmorShield = "compound shield +10"     // Name of "fast armor"-enchanted shield
-var strongArmorShield = "compound shield +11"   // Name of "high armor"-enchanted shield
+var fastArmorShield = "compound shield +10"     // Name of "Armor/sec"-enchanted shield
+var strongArmorShield = "compound shield +11"   // Name of "Armor"-enchanted shield
 var iceWandA = "ice wand +15"                   // Name of first speed-enchanted chill wand for smite combo
 var iceWandB = "ice wand +12"                   // Name of second speed-enchanted chill wand for smite combo
 var iceWandBossA = "ice wand 1* +11"            // Name of first low-star speed-enchanted chill wand for smite combo vs. bosses
 var iceWandBossB = "ice wand 1* +10"            // Name of second low-star speed-enchanted chill wand for smite combo vs. bosses
-var stoneHammerA = "stone hammer +10"           // Name of first stun-enchanted stone hammer for stun-locking
+var stoneHammerA = "stone hammer +8"            // Name of first stun-enchanted stone hammer for stun-locking
 var stoneHammerB = "stone hammer +6"            // Name of second stun-enchanted stone hammer for stun-locking
 
 // ---- QUEST FLAGS ----
 // Toggle these on to activate special script logic related to satisfying certain quest objectives.
-var isOnPPKillQuest = false                     // When true, Skeleton Arm will only activate when it can kill its target.
+
+var isOnPPKillQuest = false    // When true, Skeleton Arm will only activate when it can kill its target.
 
 // ---- HOTKEY OVERRIDES ----
-
 var rangedOverride = "repeating crossbow"       // Ranged Weapon to equip when [X] held down
+
 // *** IMPORTANT *** --- You have to use this with a nonmagical ranged weapon to defeat R.I.Pieces,
-//                       the mid-level boss in high-level Halls runs, to shoot through the ghosts it spawns;
-//                       otherwise, you'll be overrun.
-//                       IF your rangedOverride is a magical weapon, change the following to a non-magical ranged weapon; it
-//                       will be chosen instead of rangedOverride while in the Halls location:
+//                         the mid-level boss in high-level Halls runs, to kill it by shooting through the
+//                         ghosts it spawns; otherwise, you risk being overrun.
+//                       IF 'rangedOverride' is a magical weapon (i.e. a runestone, rune staff, rune wand),
+//                         change the following to a non-magical ranged weapon; it will be chosen instead
+//                         of 'rangedOverride' when [X] is held down while in the Halls location:
 var nonMagicRangedOverride = rangedOverride
 
 // ---- DEFAULT EQUIPMENT ----
-var mainWeapon = "stone sword +6"               // Name of default main melee weapon
-var mainShield = strongArmorShield              // Name of default main shield
-var mainRanged = "repeating crossbow"           // Name of default main ranged weapon
+var mainWeapon = "stone sword +11"    // Name of default main melee weapon
+var mainOffhand = "stone sword +9"    // Name of second 1-handed weapon (for fights where shields aren't helpful)
+var mainRanged = "repeating crossbow" // Name of default main ranged weapon
+var mainShield = strongArmorShield    // Name of default main shield (your 'strongArmorShield' is usually ideal)
 
 // ---- ELEMENTAL WEAPONS ----
-var elemWeapons = [  // Names of melee weapons used to take advantage of elemental weaknesses (set to 'mainWeapon' to default to that)
+var elemWeapons = [  // Names of melee weapons used to take advantage of elemental weaknesses
+                     //   (set to 'mainWeapon' to default to that)
 ^mainWeapon,           // BASE
 ^"poison sword D",     // POISON (vs. Vigor)
 ^"vigor sword D",      // VIGOR (vs. Aether)
@@ -74,16 +79,18 @@ var elemWeapons = [  // Names of melee weapons used to take advantage of element
 ^"ice sword +11 D"     // ICE (vs. Poison)
 ]
 
-var elemOffHand = [  // Name of second one-handed melee weapon, for double-wielding against elemental bosses. Set to 'false' if no second weapon.
-^"stone sword +4",     // BASE
-^"stone sword +4",     // POISON (vs. Vigor)
-^"stone sword +4",     // VIGOR (vs. Aether)
-^"stone sword +4",     // AETHER (vs. Fire)
-^"stone sword +4",     // FIRE (vs. Ice)
+var elemOffHand = [  // Name of second one-handed melee weapon, for double-wielding against
+                     //   elemental bosses (set to 'mainOffhand' to default to that)
+^mainOffhand,          // BASE
+^mainOffhand,          // POISON (vs. Vigor)
+^mainOffhand,          // VIGOR (vs. Aether)
+^mainOffhand,          // AETHER (vs. Fire)
+^mainOffhand,          // FIRE (vs. Ice)
 ^"ice sword +10 D"     // ICE (vs. Poison)
 ] 
 
-var elemRanged = [  // Names of ranged weapons used to take advantage of elemental weaknesses (set to 'mainRanged' to default to that)
+var elemRanged = [  // Names of ranged weapons used to take advantage of elemental weaknesses
+                    //   (set to 'mainRanged' to default to that)
 ^mainRanged,           // BASE
 ^"poison crossbow D",  // POISON (vs. Vigor)
 ^"vigor staff D",      // VIGOR (vs. Aether)
@@ -92,7 +99,8 @@ var elemRanged = [  // Names of ranged weapons used to take advantage of element
 ^"ice crossbow D"      // ICE (vs. Poison)
 ]
 
-var elemShields = [  // Names of shields used to take advantage of elemental weaknesses (set to 'mainShield' to default to that)
+var elemShields = [  // Names of shields used to take advantage of elemental weaknesses
+                     //   (set to 'mainShield' to default to that)
 ^mainShield,           // BASE
 ^mainShield,           // POISON (vs. Vigor)
 ^mainShield,           // VIGOR (vs. Aether)
@@ -102,7 +110,9 @@ var elemShields = [  // Names of shields used to take advantage of elemental wea
 ]
 
 // ---- POTIONS ----
-var locPotions = [ // *U.getHealingPotion: Gets healing potion for which you have the most ingredients, favoring defensive->vampiric->cleansing->healing
+var locPotions = [   // The preset functions usually do a good job of getting the right potion,
+                     //   but you can replace any of them with, e.g. "berserk" to always
+                     //   brew a berserk potion at the start of the given location. 
 ^U.getHealingPotion(),     // Rocky Plateau 
 ^U.getHealingPotion(),     // Deadwood Canyon
 ^U.getHealingPotion(),     // Caves of Fear
@@ -117,7 +127,10 @@ var forcedPotions = [ // If one of these potions is brewed at start of run, do n
 ^"Invisibility Potion"
 ]
 
-// ---- BOSSES ----
+// ---- BOSS DEBUFF THRESHOLDS ----
+// To squeeze the best times out of your runs, you can configure the script to skip applying
+//  debuffs when a boss is about to die.
+
 var poisonDebuffThreshold = // When boss' (hp + armor) is LOWER than this multiple, do NOT apply poison's damage debuff.
 ^[                          //    (0 = always apply debuff; 1 = never apply debuff)
 ^0,    // Dysangelos (Rocky Plateau)
@@ -171,10 +184,12 @@ var maskDebuffThreshold =   // When boss' (hp + armor) is LOWER than this multip
 // _ _ _ _ _ _=== END CONFIG === _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
+var preferMelee
+
 
 // =============================================== WEAPON GETTERS ==============
 func getMainWeapon()
-  ?U.getBuffCount("smite") > 0 & U.getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill
+  ?U.getBuffCount("smite") > 0 & U.getFoeDebuffCount("chill") < 6 & foe ! immune_to_debuff_chill & foe ! immune_to_ranged & foe ! bomb cart
     ?iceWandBossA
       return iceWandBossA
     ?iceWandA
@@ -211,10 +226,12 @@ func getMainShield()
   return mainShield
   
 func getMainRanged()
-  ?U.Get("preferMelee") & foe ! explode & foe ! bolesh & foe ! bronze_guardian & foe ! yeti
+  ?preferMelee & foe ! explode & foe ! bolesh & foe ! bronze_guardian & foe ! yeti
     return getMainWeapon()
-  ?U.getCounterElement() & foe ! "immune_to_" + U.getCounterElement() & (foe.hp + foe.armor) > 200 & elemRanged[U.counterElements.IndexOf(U.getCounterElement())]
-    return elemRanged[U.counterElements.IndexOf(U.getCounterElement())]
+  var counterElement
+  counterElement = U.getCounterElement()
+  ?counterElement & foe ! "immune_to_" + counterElement & (foe.hp + foe.armor) > 200 & elemRanged[U.counterElements.IndexOf(counterElement)]
+    return elemRanged[U.counterElements.IndexOf(counterElement)]
   return mainRanged
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
@@ -245,6 +262,7 @@ var dmgDebuff = 0
   U.Toggle("skeletonArm")
 :?key = bumpRBegin
   U.Toggle("preferMelee")
+  preferMelee = U.Get("preferMelee")
 :?key = upBegin & item.GetCooldown("blade") <= 0 & item.CanActivate()
   U.Toggle("isForcingBotFG")
 :?key = rightBegin
@@ -255,6 +273,7 @@ var dmgDebuff = 0
 
 // ================================================ LOCATION START =============
 ?loc.begin | loc.loop
+  preferMelee = U.Get("preferMelee")
   U.Set("maxOverAvgToExitMult", maxOverAvgToExitMult)
   U.Reset(true)
   ?loc.begin & !forcedPotions.Contains(item.potion) & item.potion ! locPotion
@@ -276,8 +295,14 @@ var dmgDebuff = 0
 // --- [SHIFT]: HUD Toggle #1
 ?key = ability1Begin
   U.Set("HUDMenuMode", "SHIFT")
+  U.Set("isShowingStatusString", true)
+  U.Set("isShowingWeaponAssignments", true)
+  U.Set("isShowingAIStatus", true)
 ?key = ability1End
   U.Set("HUDMenuMode", false)
+  U.Set("isShowingStatusString", false)
+  U.Set("isShowingWeaponAssignments", false)
+  U.Set("isShowingAIStatus", false)
   
 // --- [CTRL]: HUD Toggle #2
 ?key = ability2Begin
@@ -288,7 +313,11 @@ var dmgDebuff = 0
 
 // ================================================ FRAME INITIALIZATION =======
 dmgDebuff = U.getDebuffCount("debuff_duration_damage")
- ^ + U.getDebuffCount("spider_debuff_damage")
+            ^ + U.getDebuffCount("spider_debuff_damage")
+
+?preferMelee & U.getEndurance() < 1
+  preferMelee = false
+
 U.checkForAAC()
 U.AssignRight(getMainShield(), 1, "(initial)")
 U.AssignLeft(getMainWeapon(), 1, "(initial)")
@@ -301,6 +330,8 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
 ?U.getEndurance() < 1
   ?foe.count = 0 | (foe ! spawner & U.isFarAs("ranged"))
     U.AssignLeft("ouroboros", 1, "Passive Heal")
+  :?lifeStealRangedWeapon & U.isCloseAs("ranged") & foe ! immune_to_ranged & foe ! immune_to_physical & foe ! boss
+    U.AssignLeft(lifeStealRangedWeapon, 1, "Lifesteal")
   :?lifeStealMeleeWeapon & foe.damage <= 3 & foe ! boss
     U.AssignLeft(lifeStealMeleeWeapon, 1, "Lifesteal")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -311,8 +342,7 @@ U.AssignLeft(getMainWeapon(), 1, "(initial)")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ QUARTERSTAFF JUMP CHECK ====
-?U.Get("staffSpeed") & !U.Get("dashFreeze")
- ^ & (U.Get("isSpeedRunning") | (U.isFarAs("screen") | U.getEndurance() = 1))
+?U.Get("staffSpeed") & !U.Get("dashFreeze") & ai.enabled
  ^ & item.GetCooldown("quarterstaff") <= 0
  ^ & (foe ! bronze_guardian | U.isInState(33, 10))
  ^ & item.CanActivate()
@@ -327,7 +357,7 @@ U.Set("dashFreeze", false)
 
   ?foe = explode
     ?iceWandA & iceWandB & U.getBuffCount("smite") > 0
-    ^& foe ! immune_to_debuff_chill
+    ^& foe ! immune_to_debuff_chill & foe ! immune_to_ranged
     ^& U.getFoeDebuffCount("chill") < 6
       U.AssignLeft(iceWandA, 3.5, "Ranged Check (Explode!)")
       U.AssignRight(iceWandB, 3.5, "Ranged Check (Explode!)")
@@ -338,7 +368,7 @@ U.Set("dashFreeze", false)
   :?U.isFacingBoss()
     ?item.CanActivate() & (foe ! bronze_guardian | foe.state > 1)
       ?iceWandBossA & iceWandBossB & U.getBuffCount("smite") > 0
-      ^& foe ! immune_to_debuff_chill
+      ^& foe ! immune_to_debuff_chill & foe ! immune_to_ranged
       ^& U.getFoeDebuffCount("chill") < 6
         U.AssignLeft(iceWandBossA, 2.5, "Ranged Check (BOSS)")
         U.AssignRight(iceWandBossB, 2.5, "Ranged Check (BOSS)")
@@ -349,7 +379,7 @@ U.Set("dashFreeze", false)
    ^| foe = immune_to_physical
    ^| (
    ^    U.isFarAs("close")
-   ^    & (!U.Get("preferMelee") | U.getEndurance() < 1 | (U.getBuffCount("smite") > 0 & foe.count >= splashThreshold))
+   ^    & (!preferMelee | U.getEndurance() < 1 | (U.getBuffCount("smite") > 0 & foe.count >= splashThreshold))
    ^    & foe ! wall
    ^    & foe ! pillar
    ^  )
@@ -367,9 +397,8 @@ U.Set("dashFreeze", false)
 
     ?iceWandA & iceWandB & U.getBuffCount("smite") > 0
     ^&(foe.count > 5
-    ^  | (foe ! spawner
-    ^    & U.getFoeDebuffCount("chill") < 6
-    ^    & foe ! immune_to_debuff_chill ) )
+    ^  | (U.getFoeDebuffCount("chill") < 6
+    ^    & foe ! immune_to_debuff_chill & foe ! immune_to_ranged ) )
       U.AssignLeft(iceWandA, priority, "Ranged Check (Icy)")
       U.AssignRight(iceWandB, priority, "Ranged Check (Icy)")
     :?dmgDebuff <= dmgDebuffThreshold
@@ -378,7 +407,7 @@ U.Set("dashFreeze", false)
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ================================================ HARVEST CHECK ==============
-?!U.Get("staffSpeed") & harvest.distance < 9
+?!U.Get("staffSpeed") & !U.Get("isSpeedRunning") & harvest.distance < 9
   ?harvest = Boulder
     U.AssignBoth("shovel", 2, "Harvest Boulder")
   :
@@ -398,20 +427,6 @@ U.Set("dashFreeze", false)
   U.AssignActivate("bardiche")
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
-// =========================================== BLADE OF THE FALLEN GOD CHECK ===
-?item.GetCooldown("blade") <= 0 & item.canActivate()
-  ?U.Get("isForcingBotFG")
-    U.AssignBoth("blade of the fallen god", 4, "@X@ SMITE @X@")
-    U.AssignActivate("blade of the fallen god")
-  :?U.isCloseAs("ranged")
-   ^& foe.count > smiteThreshold
-   ^& foe ! spawner
-   ^& (U.isAtLeastSecsLeft(120) | U.isLessThanSecsLeft(100))
-    U.AssignBoth("blade of the fallen god", 3, "@@@ SMITE @@@")
-    U.AssignActivate("blade of the fallen god")
-  
-// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-
 // ================================================= TALISMAN CHECK ============
 ?summon.count = 0
 ^& item.GetCooldown("fire_talisman") <= 0 & item.CanActivate()
@@ -424,174 +439,190 @@ U.Set("dashFreeze", false)
 // =============================================================================
 // =============================================================================
 // ======================[[COMBAT LOGIC LOOP: BOSS FIGHT]]======================
-?U.isFacingBoss()
-
-  // --- ［BOSS］ Potion Check, More-Aggressive Heal Check ---
-  ?buffs.string ! berserk & buffs.string ! lucky & buffs.string ! strength
-    ?item.potion = cleansing
-    ^& debuffs.count > 15
-      activate potion
-    ?healthHammer
-    ^& item.potion = defensive
-    ^& U.getEndurance() < 0.66
-      ?item.left ! healthHammer
-        U.AssignLeft(healthHammer, 4, "Hammer Potion")
-      :?maxhp > 50
+?ai.enabled
+  ?U.isFacingBoss()
+  
+    // --- ［BOSS］ Potion Check, More-Aggressive Heal Check ---
+    ?buffs.string ! berserk & buffs.string ! lucky & buffs.string ! strength
+      ?item.potion = cleansing
+      ^& debuffs.count > 15
         activate potion
-        U.AssignLeft("", -1, "")
-    :?U.getEndurance() < 0.5
-    ^& (
-    ^  item.potion = healing
-    ^| item.potion = defensive
-    ^| item.potion = cleansing
-    ^| item.potion = vampiric
-    ^  )
-      activate potion
-    
-  // --- [BOSS] Cinderwisp Devour Check ---
-  ?devourFireRuneBossThreshold > 0
-  ^& summon.GetId() = cinderwisp
-  ^& summon.GetVar("ignition") >= devourFireRuneBossThreshold  
-    activate cinderwisp
-
-  // --- [BOSS] Armor Check ---
-  ?foe.armor > 0 & U.isCloseAs("melee")
-    ?item.GetCooldown("hammer") <= 0 & item.CanActivate()
+      ?healthHammer
+      ^& item.potion = defensive
+      ^& U.getEndurance() < 0.66
+        ?item.left ! healthHammer
+          U.AssignLeft(healthHammer, 4, "Hammer Potion")
+        :?maxhp > 50
+          activate potion
+          U.AssignLeft("", -1, "")
+      :?U.getEndurance() < 0.5
+      ^& (
+      ^  item.potion = healing
+      ^| item.potion = defensive
+      ^| item.potion = cleansing
+      ^| item.potion = vampiric
+      ^  )
+        activate potion
+      
+    // --- [BOSS] Cinderwisp Devour Check ---
+    ?devourFireRuneBossThreshold > 0
+    ^& summon.GetId() = cinderwisp
+    ^& summon.GetVar("ignition") >= devourFireRuneBossThreshold  
+      activate cinderwisp
+  
+    // --- [BOSS] Armor Check ---
+    ?foe.armor > 0 & U.isCloseAs("melee")
+      ?item.GetCooldown("hammer") <= 0 & item.CanActivate()
+        U.AssignBoth("heavy hammer", 20, "@@@ ARMOR @@@")
+        U.AssignActivate("heavy hammer")
+      :
+        U.AssignBoth("heavy hammer", 2, "vs. Armor")
+  
+    // --- [BOSS] Physical-Immune Check ---
+    ?foe = immune_to_physical
+      ?iceWandBossA & iceWandBossB
+      ^& U.getBuffCount("smite") > 0
+      ^& foe ! immune_to_ranged & foe ! immune_to_debuff_chill
+        U.AssignLeft(iceWandBossA, 3, "Phys-Immune")
+        U.AssignRight(iceWandBossB, 3, "Phys-Immune")
+      :
+        U.AssignLeft(magicRangedWeapon, 3, "Phys-Immune")
+  
+    // --- ［BOSS］ Debuff Checks ---
+    ?debuffDamageWeapon
+    ^ & U.isDebuffing(debuffDmgThreshold, "damage")
+      U.AssignRight("cultist mask", 3, "@-Debuff-@")
+      U.AssignLeft(debuffDamageWeapon, 3, "@-Damage-@")
+    :?debuffDoTWeapon
+    ^ & U.isDebuffing(debuffDotThreshold, "dot")
+      U.AssignRight("cultist mask", 3, "@-Debuff-@")
+      U.AssignLeft(debuffDoTWeapon, 3, "@-DoT-@")
+    :?debuffChillWeapon
+    ^ & U.isDebuffing(debuffChillThreshold, "chill")
+      U.AssignRight("cultist mask", 3, "@-Debuff-@")
+      U.AssignLeft(debuffChillWeapon, 3, "@-Chill-" + U.getFoeDebuffCount("chill") + "-@")
+    :?U.isDebuffing(1, "armor")
       U.AssignBoth("heavy hammer", 20, "@@@ ARMOR @@@")
       U.AssignActivate("heavy hammer")
-    :
-      U.AssignBoth("heavy hammer", 2, "vs. Armor")
-
-  // --- [BOSS] Physical-Immune Check ---
-  ?foe = immune_to_physical
-    ?iceWandBossA & iceWandBossB
-    ^& U.getBuffCount("smite") > 0
-      U.AssignLeft(iceWandBossA, 3, "Phys-Immune")
-      U.AssignRight(iceWandBossB, 3, "Phys-Immune")
-    :
-      U.AssignLeft(magicRangedWeapon, 3, "Phys-Immune")
-
-  // --- ［BOSS］ Debuff Checks ---
-  ?debuffDamageWeapon & U.isDebuffing(debuffDmgThreshold, "damage")
-    U.AssignRight("cultist mask", 3, "@-Debuff-@")
-    U.AssignLeft(debuffDamageWeapon, 3, "@-Damage-@")
-  :?debuffDoTWeapon & U.isDebuffing(debuffDotThreshold, "dot")
-    U.AssignRight("cultist mask", 3, "@-Debuff-@")
-    U.AssignLeft(debuffDoTWeapon, 3, "@-DoT-@")
-  :?debuffChillWeapon & U.isDebuffing(debuffChillThreshold, "chill")
-    U.AssignRight("cultist mask", 3, "@-Debuff-@")
-    U.AssignLeft(debuffChillWeapon, 3, "@-Chill-" + U.getFoeDebuffCount("chill") + "-@")
-  :?U.isDebuffing(1, "armor")
-    U.AssignBoth("heavy hammer", 20, "@@@ ARMOR @@@")
-    U.AssignActivate("heavy hammer")
-  :?U.isDebuffing(debuffFeebleThreshold, "feeble")
-    U.AssignRight("cultist mask", 20, "@@@ ENFEEBLE @@@")
-    U.AssignActivate("cultist mask")
-
-  // --- [BOSS] Offensive Potion Check ---
-  ?U.isOffensivePotion(item.potion)
-    ?foe = bronze_guardian
-      ?U.isInState(33, 30)
-        activate potion
-    :?foe = nagaraja
-      ?U.isCloseAs("melee")
-        activate potion
-    :?foe = bolesh
-      ?item.CanActivate()
-        activate potion
-    :?foe = yeti
-      ?U.isInState(32, 1)
-        activate potion
-    :?foe = dysangelos
-      ?U.isInState(32, 1)
-        activate potion
-    :?foe.state > 1
-      activate potion
-
-  // --- [BOSS] Special Weapon Check ---
-  ?foe = nagaraja
-  ^& foe.state > 1
-    U.AssignLeft(getMainWeapon(), 2, "!! Naga Left !!")
-    U.AssignRight(getMainOffhandWeapon(), 2, "!! Naga Right !!")
-  :?icePillarWeapon
-  ^& foe = ice wall
-    U.AssignLeft(icePillarWeapon, 2.6, "!! Ice Wall !!")
-    U.AssignRight("moondial", 2.6, "!! Ice Wall !!")
-  :?stoneHammerA & stoneHammerB
-  ^& foe = poena 
-    U.AssignLeft(stoneHammerA, 3.4, "Stun Lock")
-    U.AssignRight(stoneHammerB, 3.4, "Stun Lock")
-  :?foe = bolesh
-    U.Set("dashFreeze", true)
-    U.AssignBoth(getMainRanged(), 3.5, "!! Bolesh !!")
-  :?foe = pallas
-  ^& foe = phase2
-    U.AssignRight(lifeStealShield, 2, "!! Pallas Right !!")
-  :?foe = yeti
-  ^& (U.isInState(133, 0) ! U.isInState(143, 0))
-    U.AssignBoth(getMainRanged(), 3.5, "!! Yeti Blow !!")
+    :?U.isDebuffing(debuffFeebleThreshold, "feeble")
+      U.AssignRight("cultist mask", 20, "@@@ ENFEEBLE @@@")
+      U.AssignActivate("cultist mask")
   
-  // --- [BOSS] Dodge Check ---
-  ?item.GetCooldown("mind") <= 0
-    ?foe = dysangelos & foe = phase1 & U.isInState(33, 0)
-    ^| foe = pallas & foe = phase1 & U.isInState(32, 60)
-      U.Dodge(false)
-    ?foe = dysangelos & foe = phase3 & U.isInState(115, 60)
-    ^| foe = nagaraja & U.isInState(112, 53)
-    ^| foe = bronze_guardian & U.isInState(32, 10)
-      U.Dodge(true)
-// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-
-// =============================================================================
-// ======================[[COMBAT LOGIC LOOP: NON-BOSS FIGHT]]==================
-:? U.isCloseAs("ranged")
+    // --- [BOSS] Offensive Potion Check ---
+    ?U.isOffensivePotion(item.potion)
+      ?foe = bronze_guardian
+        activate potion
+      :?foe = nagaraja
+        ?U.isCloseAs("melee")
+          activate potion
+      :?foe = bolesh
+        ?item.CanActivate()
+          activate potion
+      :?foe = yeti
+        ?U.isInState(32, 1)
+          activate potion
+      :?foe = dysangelos
+        ?U.isInState(32, 1)
+          activate potion
+      :?foe.state > 1
+        activate potion
+  
+    // --- [BOSS] Special Weapon Check ---
+    ?foe = nagaraja
+    ^& foe.state > 1
+      U.AssignLeft(getMainWeapon(), 2, "!! Naga Left !!")
+      U.AssignRight(getMainOffhandWeapon(), 2, "!! Naga Right !!")
+    :?icePillarWeapon
+    ^& foe = ice wall
+      U.AssignLeft(icePillarWeapon, 2.6, "!! Ice Wall !!")
+      U.AssignRight("moondial", 2.6, "!! Ice Wall !!")
+    :?stoneHammerA & stoneHammerB
+    ^& foe = poena 
+      U.AssignLeft(stoneHammerA, 3.4, "Stun Lock")
+      U.AssignRight(stoneHammerB, 3.4, "Stun Lock")
+    :?foe = bolesh
+      U.Set("dashFreeze", true)
+      U.AssignBoth(getMainRanged(), 3.5, "!! Bolesh !!")
+    :?lifeStealShield
+	^& foe = pallas
+    ^& foe = phase2
+      U.AssignRight(lifeStealShield, 2, "!! Pallas Right !!")
+    :?foe = yeti
+    ^& (U.isInState(133, 0) ! U.isInState(143, 0))
+      U.AssignBoth(getMainRanged(), 3.5, "!! Yeti Blow !!")
     
-  // --- [NON-BOSS] Cinderwisp Devour Check ---
-  ?devourFireRuneThreshold > 0
-  ^& summon.GetId() = cinderwisp
-  ^& summon.GetVar("ignition") >= devourFireRuneThreshold
-  ^& U.isShortOfBestTimeBy(90)
-    activate cinderwisp
-    
-  // --- [NON-BOSS] Pick-Pocket Check ---
-  ?U.Get("skeletonArm") & item.GetCooldown("skeleton_arm") <= 0
-    U.AssignBoth("skeleton", 3.2, "@-Debuff-PPocket-@")
-    ?U.getBuffCount("pick_pocket") >= maxPickPocketBuffs
-    ^& item.CanActivate()
-    ^& foe.distance <= 7
-    ^& (!isOnPPKillQuest | (foe.armor + foe.hp) <= 10 & foe.hp > 0)
-      U.AssignBoth("skeleton", 3.5, "@@@ PICKPOCKET @@@")
-      U.AssignActivate("skeleton")
-
-  // --- [NON-BOSS] Ice Pillar Check ---
-  ?(foe = ice pillar | foe = ice wall) & U.isCloseAs("ranged") & icePillarWeapon
-    U.AssignLeft(icePillarWeapon, 3, "!! Ice Pillar !!")    
-
-  // --- [NON-BOSS] Evade-for-Range Check ---
-  ?item.GetCooldown("mind") <= 0 
-  ^& U.getEndurance() < 0.75
-  ^& !U.Get("isSpeedRunning")
-  ^& U.isCloseAs("close")
-    U.Dodge(true)
-
-  // --- [NON-BOSS (sorta)] Temple Acronian Miniboss Check ---
-  ?foe = acronian & loc = temple
-    U.AssignLeft(getMainWeapon(), 2, "!! Acro Left !!")
-    U.AssignRight(getMainOffhandWeapon(), 2, "!! Acro Right !!")
+    // --- [BOSS] Dodge Check ---
     ?item.GetCooldown("mind") <= 0
-    ^& armor < foe.damage
-    ^& U.isInState(32, 6)
-      U.Dodge(false)
-
-  // --- [NON-BOSS (sorta)] Bomb Cart Miniboss Check ---
-  ?foe = bomb cart
-    ?foe.distance < 7
-      U.Dodge(false)
-//      equip mind
-    :?U.isInRange(11, 15)
-      U.AssignRight(U.canDash(), 3.9, ">> DASH >>")
-
-//      equipR dash
+      ?foe = dysangelos & foe ! phase3 & U.isInState(33, 0)
+        U.Dodge(false)
+      ?foe = dysangelos & foe = phase3 & U.isInState(115, 60)
+      ^| foe = nagaraja & U.isInState(112, 53)
+      ^| foe = bronze_guardian & U.isInState(32, 10)
+      ^| foe = pallas & foe = phase1 & U.isInState(32, 65)
+        U.Dodge(true)
+  // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+  
+  // =============================================================================
+  // ======================[[COMBAT LOGIC LOOP: NON-BOSS FIGHT]]==================
+  :
+  
+    // --- [NON-BOSS] BotFG Smite Check ---
+    ?item.GetCooldown("blade") <= 0 & item.canActivate()
+      ?U.Get("isForcingBotFG")
+        U.AssignBoth("blade of the fallen god", 4, "@X@ SMITE @X@")
+        U.AssignActivate("blade of the fallen god")
+      :?U.isCloseAs("ranged")
+       ^& foe.count > smiteThreshold
+       ^& (U.isAtLeastSecsLeft(120) | U.isLessThanSecsLeft(90))
+        U.AssignBoth("blade of the fallen god", 3, "@@@ SMITE @@@")
+        U.AssignActivate("blade of the fallen god")
+  
+    ?U.isCloseAs("ranged")
+  
+      // --- [NON-BOSS] Cinderwisp Devour Check ---
+      ?devourFireRuneThreshold > 0
+      ^& summon.GetId() = cinderwisp
+      ^& summon.GetVar("ignition") >= devourFireRuneThreshold
+      ^& U.isShortOfBestTimeBy(90)
+        activate cinderwisp
+        
+      // --- [NON-BOSS] Pick-Pocket Check ---
+      ?U.Get("skeletonArm") & item.GetCooldown("skeleton_arm") <= 0
+        U.AssignBoth("skeleton", 3.2, "@-Debuff-PPocket-@")
+        ?U.getBuffCount("pick_pocket") >= maxPickPocketBuffs
+        ^& item.CanActivate()
+        ^& foe.distance <= 7
+        ^& (!isOnPPKillQuest | (foe.armor + foe.hp) <= 10 & foe.hp > 0)
+          U.AssignBoth("skeleton", 3.5, "@@@ PICKPOCKET @@@")
+          U.AssignActivate("skeleton")
+      
+      // --- [NON-BOSS] Ice Pillar Check ---
+      ?(foe = ice pillar | foe = ice wall) & U.isCloseAs("ranged") & icePillarWeapon
+        U.AssignLeft(icePillarWeapon, 3, "!! Ice Pillar !!")    
+      
+      // --- [NON-BOSS] Evade-for-Range Check ---
+      ?U.getEndurance() < 0.75
+      ^& !U.Get("isSpeedRunning")
+      ^& U.isCloseAs("close")
+        U.Set("dashFreeze", true)
+        preferMelee = false
+        ?item.GetCooldown("mind") <= 0 
+          U.Dodge(true)
+      :?U.getEndurance() > 0.75
+        U.Set("dashFreeze", false)
+      
+      // --- [NON-BOSS (sorta)] Temple Acronian Miniboss Check ---
+      ?foe = acronian & loc = temple
+        U.AssignLeft(getMainWeapon(), 2, "!! Acro Left !!")
+        U.AssignRight(getMainOffhandWeapon(), 2, "!! Acro Right !!")
+        ?item.GetCooldown("mind") <= 0
+        ^& armor < foe.damage
+        ^& U.isInState(32, 6)
+          U.Dodge(false)
+      
+      // --- [NON-BOSS (sorta)] Bomb Cart Miniboss Check ---
+      ?foe = bomb cart & foe.distance < 7
+        equip mind
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 // ============================== FINAL OVERRIDING CHECKS ======================
