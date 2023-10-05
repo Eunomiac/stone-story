@@ -1,5 +1,11 @@
-# My Over-Thought & Under-Done STONE STORY Script!
+# Learning StoneScript
+The [Scripts-Annotated](https://github.com/Eunomiac/stone-story/tree/71a3a8ac396cbab9e1ecf6a541c8845ec9bb35f0/Scripts-Annotated) folder contains scripts that aren't part of my main scripts, but may be helpful to people just starting out or who want to learn StoneScript.  Every script in this folder is fully annotated with comments explaining almost every line, as well as comments offering more general suggestions and advice.  Most files contain a section at the end containing just the code, without my comments.
 
+- [Attack Animation Cancelling](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Annotated/AttackAnimationCancelling-Annotated.txt) — A simple function you can run every frame to dramatically increase your attack speed by cancelling the animation of your weapon after it has dealt damage. This is a powerful scripting trick that everyone should use; check out [this video for a demonstration of its impact](https://youtu.be/BGKyCCMCUXY).
+- [SimpleRockyPlateau](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Annotated/SimpleRockyPlateau-Annotated.txt) — A bare-bones script for farming the Rocky Plateau level _(requested by someone who was out of stones!)_. It includes Attack Animation Cancelling, as well as full combat logic for all three phases of the Dysangelos boss battle. It's fully annotated, and I've uploaded [a video showing it in action](https://youtu.be/EFTAjH8eCd0).
+- [Romanize & xLookup](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Annotated/HelperFunction-CrossLookup-Annotated.txt) — Two helper functions you can drop right into your code and start using: A simple function to convert integers into Roman numbers, intended to set the stage for a much more versatile and useful function, `xLookup`, which you can use to "map" any value onto any other value.
+
+# My Over-Thought & Under-Done STONE STORY Script!
 Three files that, together, comprise the automation script for my Stone Story gaming. I make no claims to how optimal or capable this script is, as I put it together without seeking help from the larger Stone Story community (what can I say, I like to figure things out for myself)! I've added comments and some configuration features, which I'll outline below.
 
 ## Assumptions Before We Begin
@@ -47,8 +53,3 @@ The following keyboard controls can be used to change the behavior of the script
 - `[X]` — HOLD to force-equip a (configurable) ranged weapon
 - `[D]` — Immediately trigger a dash by equipping a Bashing or Dash Shield
 - `[W]` — Immediately equip & activate Blade of the Fallen God
-
-# Learning StoneScript
-The [Scripts-Annotated](https://github.com/Eunomiac/stone-story/tree/71a3a8ac396cbab9e1ecf6a541c8845ec9bb35f0/Scripts-Annotated) folder contains scripts that aren't part of my main scripts, but may be helpful to people just starting out or who want to learn StoneScript.  Every script in this folder is fully annotated with comments explaining almost every line, as well as comments offering more general suggestions and advice.
-- [SimpleRockyPlateau](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Annotated/SimpleRockyPlateau-Annotated.txt) — A bare-bones script for farming the Rocky Plateau level _(requested by someone who was out of stones!)_. It includes Attack Animation Cancelling, as well as full combat logic for all three phases of the Dysangelos boss battle. It's fully annotated, and I've uploaded [a video showing it in action](https://youtu.be/EFTAjH8eCd0).
-- [Romanize & xLookup](https://raw.githubusercontent.com/Eunomiac/stone-story/master/Scripts-Annotated/HelperFunction-CrossLookup-Annotated.txt) — Two helper functions you can drop right into your code and start using: A simple function to convert integers into Roman numbers, intended to set the stage for a much more versatile and useful function, `xLookup`, which you can use to "map" any value onto any other value. Includes an example of its use, as well as a comment-free section at the end containing only the code without my annotations.
