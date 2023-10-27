@@ -1,9 +1,9 @@
 // = CONFIG =
 // - MOBILE-SPECIFIC SETTINGS
-var isSpeedRunning = false
-var preferMelee = false
-var isPickPocketingWithSkeletonArm = true
-var isOnPPKillQuest = false
+var isSpeedRunning = false // *** NEW ***
+var preferMelee = false // *** NEW ***
+var isPickPocketingWithSkeletonArm = false // *** NEW ***
+var isOnPPKillQuest = false // *** NEW ***
 
 // - THRESHOLD VALUES
 var smiteThreshold = 6
@@ -12,30 +12,30 @@ var splashThreshold = 3
 var foeArmorThreshold = 50
 var fastArmorShieldMax = 14
 var maxPickPocketBuffs = 1 // *** NEW ***
-var maxOverAvgToExitMult = 0 // *** NEW ***
+var maxOverAvgToExitMult = 1.15
 var devourFireRuneThreshold = 3
 var devourFireRuneBossThreshold = 10
-                                
+
 // - ARSENAL
 var splashMeleeWeapon = "big aether sword U"
 var healthHammer = "vigor hammer"
 var antiArmorMeleeWeapon = "heavy hammer"
 var debuffDamageWeapon = "poison sword dP"
 var debuffDoTWeapon = "fire sword dF"
-var debuffChillWeapon = "ice sword dI"                                         
+var debuffChillWeapon = "ice sword dI"
 var magicRangedWeapon = "vigor staff"
 var lifeStealMeleeWeapon = false
 var lifeStealRangedWeapon = false
 var lifeStealShield = "vigor shield h"
 var icePillarWeapon = "big aether sword U"
-var fastArmorShield = "compound shield +10"
-var strongArmorShield = "compound shield +11"
-var iceWandA = "ice wand +15"
-var iceWandB = "ice wand +12"
-var iceWandBossA = iceWandA
-var iceWandBossB = iceWandB
-var stoneHammerA = "stone hammer +10"
-var stoneHammerB = "stone hammer +6"
+var fastArmorShield = "compound shield +7"
+var strongArmorShield = "compound shield +9"
+var iceWandA = "ice wand +13"
+var iceWandB = "ice wand +8"
+var iceWandBossA = ice wand 1* +7
+var iceWandBossB = ice wand 2* +7
+var stoneHammerA = "stone hammer +8"
+var stoneHammerB = "stone hammer +10"
 
 // - DEFAULT EQUIPMENT
 var mainWeapon = "big aether sword U"
@@ -49,7 +49,7 @@ var elemWeapons = [
 ^"vigor sword D",
 ^"aether sword D",
 ^"fire sword D",
-^"ice sword +11 D"
+^"ice sword +9 D"
 ]
 
 var elemOffHand = [
@@ -58,7 +58,7 @@ var elemOffHand = [
 ^false,
 ^false,
 ^false,
-^"ice sword +10 D"
+^"ice sword +9 D"
 ] 
 
 var elemRanged = [
