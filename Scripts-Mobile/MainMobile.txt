@@ -13,7 +13,7 @@ var dmgDebuffThreshold = 7
 var splashThreshold = 3
 var foeArmorThreshold = 50
 var fastArmorShieldMax = 14
-var strongArmorShieldMax = 26 /* NEW */
+var strongArmorShieldMax = 26
 var maxPickPocketBuffs = 2
 var maxOverAvgToExitMult = 1.15
 var devourFireRuneThreshold = 3
@@ -21,9 +21,8 @@ var devourFireRuneBossThreshold = 10
 
 // - ARSENAL
 var splashMeleeWeapon = "big aether sword U"
-var healthRuneA = "vigor hammer" /* NEW */
-var healthRuneB = false /* NEW */
-var healthHammer = "vigor hammer"
+var healthRuneA = "poison rune *10"
+var healthRuneB = "vigor rune *10"
 var antiArmorMeleeWeapon = "heavy hammer"
 var debuffDamageWeapon = "poison sword dP"
 var debuffDoTWeapon = "fire sword dF"
@@ -32,8 +31,8 @@ var magicRangedWeapon = "vigor staff"
 var lifeStealMeleeWeapon = false
 var lifeStealRangedWeapon = false
 var lifeStealShield = "vigor shield h"
-var icePillarWeaponA = "big aether sword U" /* NEW */
-var icePillarWeaponB = "moondial" /* NEW */
+var icePillarWeaponA = "big aether sword U"
+var icePillarWeaponB = "moondial"
 var strongArmorShield = "compound shield +10"
 var fastArmorShield = getAlt(strongArmorShield)
 var iceWandA = "ice wand +14"
@@ -45,8 +44,8 @@ var stoneHammerB = getAlt(stoneHammerA)
 
 // - DEFAULT EQUIPMENT
 var mainWeapon = "big aether sword U"
-var mainOffhand = false /* NEW */
-var mainTwoHanded = false /* NEW */
+var mainOffhand = false
+var mainTwoHanded = false
 var mainShield = strongArmorShield
 var mainRanged = "repeating crossbow"
 
@@ -144,6 +143,7 @@ var maskDebuffThreshold = [
   ^1     // Nagaraja (Temple)
 ]
 // = END CONFIG =
+
 var bardicheActivationDelay = 1
 var heavyHammerActivationDelay = 5
 
@@ -332,7 +332,7 @@ func InitBoth()
     Set("bothPriority", 0)
 
 func AssignBoth(itemRef, priority)
-  ?priority < 0
+  ?priority <= 0
     Set("bothPriority", 0)
     return
   ?Type(itemRef) = "string" & string.Size(itemRef) > 2
@@ -349,7 +349,7 @@ func AssignBoth(itemRef, priority)
     Set("bothPriority", priority)
 
 func AssignLeft(itemRef, priority)
-  ?priority < 0
+  ?priority <= 0
     Set("leftPriority", 0)
     return
   ?Type(itemRef) = "string" & string.Size(itemRef) > 2
@@ -367,7 +367,7 @@ func AssignLeft(itemRef, priority)
     Set("leftPriority", priority)
 
 func AssignRight(itemRef, priority)
-  ?priority < 0
+  ?priority <= 0
     Set("rightPriority", 0)
     return
   ?Type(itemRef) = "string" & string.Size(itemRef) > 2
@@ -389,11 +389,11 @@ func AssignActivate(param)
     Set("isActivating", param)
 
 func EquipItems()
-  ?Get("assignedLeft") ! false & item.GetCount(Get("assignedLeft")) > 0
+  ?Get("assignedLeft") ! false & Get("leftPriority") > 0 & item.GetCount(Get("assignedLeft")) > 0
     equipL @Get("assignedLeft")@
-  ?Get("assignedRight") ! false & item.GetCount(Get("assignedRight")) > 0
+  ?Get("assignedRight") ! false & Get("rightPriority") > 0 & item.GetCount(Get("assignedRight")) > 0
     equipR @Get("assignedRight")@
-  ?Get("assignedBoth") ! false & item.GetCount(Get("assignedBoth")) > 0
+  ?Get("assignedBoth") ! false & Get("bothPriority") > 0 & item.GetCount(Get("assignedBoth")) > 0
     equip @Get("assignedBoth")@
 
 func breakBuff(buff)
@@ -469,7 +469,12 @@ func getEndurance()
   return percentFloat
 
 func getDashShield()
-  ?item.GetCount("bash") > 0 & item.GetCooldown("bash") <= 0 & (foeCount > 5 | (foeString ! immune_to_stun & (foeString = boss | foeDamage > 4)))
+  ?item.GetCount("bash") > 0 & item.GetCooldown("bash") <= 0
+  ^& foeString ! poena
+  ^& (foeCount > 5
+  ^   | (foeString ! immune_to_stun
+  ^      & (foeString = boss | foeDamage > 4))
+  ^  )
     return "bash"
   :?item.GetCount("dash") > 0
     return "dash"
@@ -804,7 +809,11 @@ Set("isDashBlocked", false)
       :
         AssignLeft(getMainRanged(), 3.5)
 
-    :?isFacingBoss() & (foeString ! dysangelos)
+    :?isFacingBoss() & (
+      ^foeString ! dysangelos
+      ^&foeString ! nagaraja
+      ^&foeString ! poena
+    ^)
       ?item.CanActivate() & (foeString ! bronze_guardian | foe.state > 1)
         ?iceWandBossA & iceWandBossB & getBuffCount("smite") > 0
         ^& foeString ! immune_to_debuff_chill
@@ -994,6 +1003,8 @@ Set("isDashBlocked", false)
     ?isPickPocketingWithSkeletonArm = true
     ^& (preferMelee | isCloseAs("melee"))
     ^& item.GetCooldown("skeleton_arm") <= 0
+    ^& item.CanActivate()
+    ^& !(locName = temple & foeString = acronian)
     ^& foeString ! immune_to_physical
       AssignBoth("skeleton", 3.2)
       ?getBuffCount("pick_pocket") >= maxPickPocketBuffs
@@ -1013,11 +1024,11 @@ Set("isDashBlocked", false)
       ?item.GetCooldown("mind") <= 0
       ^& armor < foeDamage
       ^& isInState(32, 6)
-        Dodge()
+        Dodge(false)
 
     ?foeString = bomb cart
       ?foeDistance < 7
-        Dodge()
+        Dodge(false)
         equip mind
       :?isInRange(11, 15)
         equipR dash
