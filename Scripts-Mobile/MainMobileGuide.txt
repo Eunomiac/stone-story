@@ -36,7 +36,7 @@ var strongArmorShieldMax = 26
 var maxPickPocketBuffs = 3
   // Max number of pick-pocket buffs you can have (see your Skeleton Arm's stats)
 var maxOverAvgToExitMult = 1.15
-  // If, during a speed run ('S' hotkey toggle), your current time exceeds your average time
+  // If 'isSpeedRunning' is true and your current time ever exceeds your average time
   //   multiplied by this number, you'll auto-exit the stage (to prevent your average
   //   taking a hit).  Set to 0 to disable.
 var devourFireRuneThreshold = 3
