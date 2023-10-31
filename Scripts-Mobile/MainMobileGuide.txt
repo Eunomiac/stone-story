@@ -15,7 +15,6 @@ var isOnPPKillQuest = false
   // Are you on the Skeleton Arm quest that requires you to kill enemies with the Pick Pocket attack?
   //   (Note: 'isPickPocketingWithSkeletonArm' must also be true to enable the Skeleton Arm logic)
 
-
 // ---- THRESHOLD VALUES ----
 
 var minCombatDistance = 25
@@ -47,11 +46,9 @@ var devourFireRuneBossThreshold = 10
   //   Set to 0 to never trigger devour against bosses.
 
 // ---- ARSENAL ----
-// *** If you don't have a weapon for the indicated slot, set the value to 'false'. ***
-
-// ---- ARSENAL ----
 // If you don't have a weapon for the indicated slot, or you don't want to change your weapon in the
 //  situation described, set the value to 'false' (without any quotes).
+
 // The 'getAlt(weap)' function will equip a weapon that matches 'weap' but has a different enchantment level:
 //  It saves you the need to have to enter in the specific enchantment levels of two otherwise-identical weapons for dual-wielding.
 //  Note: You have to include an enchantment level (i.e. '+#') in whatever you pass to the function, or it won't work:
