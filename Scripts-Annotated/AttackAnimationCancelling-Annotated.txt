@@ -16,7 +16,7 @@ func isEquippedTwoHanded()
   whenever you're wielding a one-handed weapon, we can
   check if one of your hands is empty.
     Since two-handed weapons always appear in your right
-  hand, we just need to check if your left hand is empty:
+  hand, we just need to check if your left hand is empty: */
 
   return !item.left
 
