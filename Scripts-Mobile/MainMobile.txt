@@ -5,10 +5,12 @@ var isStaffJumping = true
 var preferMelee = false
 var isPickPocketingWithSkeletonArm = true
 var isOnPPKillQuest = false
+var useAetherTalisman = false
 
 // - THRESHOLD VALUES
 var minCombatDistance = 25
 var smiteThreshold = 6
+var voidweaverThreshold = 6
 var dmgDebuffThreshold = 7
 var splashThreshold = 3
 var foeArmorThreshold = 50
@@ -669,7 +671,7 @@ func checkForAAC()
     equipR shield *0
 
 func isRangedWeapon(itemid)
-  return itemid = runestone | itemid = crossbow | itemid = wand | itemid = talisman | itemid = staff | itemid = ouroboros
+  return itemid = runestone | itemid = crossbow | itemid = wand | itemid = fire_talisman | itemid = aether_talisman | itemid = staff | itemid = ouroboros
 func isTwoHanded(itemid)
   return itemid = crossbow | itemid = heavy hammer | itemid = heavy_hammer | itemid = staff | itemid = bardiche | itemid = blade of the fallen god | itemid = skeleton arm
 func isUsingRanged()
@@ -880,8 +882,13 @@ Set("isDashBlocked", false)
   ^& item.GetCooldown("fire_talisman") <= 0 & item.CanActivate()
   ^& isFarAs("medium")
   ^& foeString ! poena
-    AssignRight("talis", 20)
-    AssignActivate("talis")
+    ?!useAetherTalisman
+      AssignRight("fire_talisman", 20)
+      AssignActivate("fire_talisman")
+    :
+      // TODO: assign aether talisman.
+
+  // TODO: activate voidweaver if aether talisman is equiped.
 
   ?isFacingBoss()
 
